@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mwendavano Monitor · Staff and access</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f3f5f4}
+a{color:#0f6b6b}a:hover{color:#0a4c4c}
+</style>
+</helmet>
+<div style="font-family: 'Inter Tight', system-ui, sans-serif; color: #10211f; background: #f3f5f4; min-height: 100vh; display: flex; flex-wrap: wrap">
+
+  <nav aria-label="Main" style="flex: 1 1 232px; max-width: 100%; background: #0f2624; color: #e7efed; padding: 24px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 0 8px">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #f0b429; color: #0f2624; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px">M</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-weight: 700; font-size: 16px">Mwendavano</span>
+        <span style="font-size: 12px; color: #a9bdb9">Monitor</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        Overview
+      </a>
+      <a href="Users.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"></path><path d="M16 4.5a4 4 0 0 1 0 7"></path><path d="M19 14.5c1.8 1.1 3 3.4 3 6.5"></path></svg>
+        Users
+      </a>
+      <a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Visitors
+      </a>
+      <a href="Staff.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: #1d3d3a; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M3 13h18"></path></svg>
+        Staff and access
+      </a>
+      <a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"></rect><rect x="3" y="13" width="18" height="7" rx="1.5"></rect><path d="M7 7.5h.01"></path><path d="M7 16.5h.01"></path></svg>
+        Systems
+      </a>
+    </div>
+    <div style="margin-top: auto; padding: 12px; border-radius: 12px; background: #17322f; display: flex; align-items: center; gap: 12px">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #2f5e59; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">JG</div>
+      <div style="display: flex; flex-direction: column; min-width: 0">
+        <span style="font-size: 14px; font-weight: 600">Joel M. Gaitan</span>
+        <span style="font-size: 12px; color: #a9bdb9">CEO · Owner</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #4d5f5c">Who on the Mwendavano team can see and change what</span>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Staff and access</h1>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+        <span style="font-size: 12px; font-weight: 600; color: #7a4a00; background: #fdf0d2; border-radius: 999px; padding: 6px 10px">Sample data</span>
+        <button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 10px; border: 0; background: #0f6b6b; color: #ffffff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Invite staff</button>
+      </div>
+    </header>
+
+    <section aria-labelledby="team-h" style="background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+        <h2 id="team-h" style="margin: 0; font-size: 18px; font-weight: 700">Team</h2>
+        <span style="font-size: 13px; color: #4d5f5c">Tap a person to see their activity</span>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px">
+          <thead>
+            <tr style="text-align: left; color: #4d5f5c; font-size: 12px">
+              <th style="padding: 10px 8px 10px 0; font-weight: 600">Person</th>
+              <th style="padding: 10px 8px; font-weight: 600">Role</th>
+              <th style="padding: 10px 8px; font-weight: 600; text-align: center">Mauzo</th>
+              <th style="padding: 10px 8px; font-weight: 600; text-align: center">Soko</th>
+              <th style="padding: 10px 8px; font-weight: 600; text-align: center">Wafanyakazi</th>
+              <th style="padding: 10px 8px; font-weight: 600; text-align: center">Cargo</th>
+              <th style="padding: 10px 8px; font-weight: 600; text-align: center">Server</th>
+              <th style="padding: 10px 8px; font-weight: 600">Two-step login</th>
+              <th style="padding: 10px 0 10px 8px; font-weight: 600">Last seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{team}}" as="m" hint-placeholder-count="4">
+              <tr onClick="{{m.pick}}" style="{{m.rowStyle}}">
+                <td style="padding: 12px 8px 12px 0">
+                  <button type="button" onClick="{{m.pick}}" style="display: flex; align-items: center; gap: 10px; border: 0; background: transparent; padding: 0; font: inherit; color: #10211f; cursor: pointer; text-align: left; min-height: 44px">
+                    <span style="{{m.avatar}}">{{m.initials}}</span>
+                    <span style="display: flex; flex-direction: column">
+                      <span style="font-weight: 600">{{m.name}}</span>
+                      <span style="font-size: 12px; color: #4d5f5c">{{m.email}}</span>
+                    </span>
+                  </button>
+                </td>
+                <td style="padding: 12px 8px; color: #33433f">{{m.role}}</td>
+                <sc-for list="{{m.access}}" as="a" hint-placeholder-count="5">
+                  <td style="padding: 12px 8px; text-align: center"><span style="{{a.style}}">{{a.label}}</span></td>
+                </sc-for>
+                <td style="padding: 12px 8px"><span style="{{m.twoStyle}}">{{m.two}}</span></td>
+                <td style="padding: 12px 0 12px 8px; color: #33433f; white-space: nowrap">{{m.seen}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #33433f">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="font-weight: 700; color: #ffffff; background: #0f2624; border-radius: 6px; padding: 2px 8px">Admin</span>change anything</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="font-weight: 700; color: #0a4c4c; background: #dcefee; border-radius: 6px; padding: 2px 8px">Support</span>see users, help them</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="font-weight: 700; color: #33433f; background: #edf1ef; border-radius: 6px; padding: 2px 8px">View</span>read only</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="font-weight: 700; color: #4d5f5c; border: 1px dashed #b7c4c0; border-radius: 6px; padding: 1px 8px">None</span>no access</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="log-h" style="background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 8px">
+        <h2 id="log-h" style="margin: 0; font-size: 18px; font-weight: 700">Activity: {{who}}</h2>
+        <span style="font-size: 13px; color: #4d5f5c">Every change by staff is recorded here</span>
+      </div>
+      <sc-for list="{{log}}" as="l" hint-placeholder-count="6">
+        <div style="display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid #e9efec; align-items: flex-start">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4d5f5c; width: 96px; flex: none; padding-top: 1px">{{l.time}}</span>
+          <span style="{{l.sysStyle}}">{{l.system}}</span>
+          <span style="font-size: 14px; color: #10211f; min-width: 0">{{l.text}}</span>
+        </div>
+      </sc-for>
+      <sc-if value="{{noLog}}" hint-placeholder-val="{{false}}">
+        <p style="margin: 0; padding: 16px 0; color: #4d5f5c; border-top: 1px solid #e9efec">No activity in the last 7 days.</p>
+      </sc-if>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { person: 'all' };
+  }
+  renderVals() {
+    const person = this.state.person;
+    const A = {
+      Admin: 'font-size: 12px; font-weight: 700; color: #ffffff; background: #0f2624; border-radius: 6px; padding: 3px 8px',
+      Support: 'font-size: 12px; font-weight: 700; color: #0a4c4c; background: #dcefee; border-radius: 6px; padding: 3px 8px',
+      View: 'font-size: 12px; font-weight: 700; color: #33433f; background: #edf1ef; border-radius: 6px; padding: 3px 8px',
+      None: 'font-size: 12px; font-weight: 700; color: #4d5f5c; border: 1px dashed #b7c4c0; border-radius: 6px; padding: 2px 8px'
+    };
+    const on = 'font-size: 12px; font-weight: 700; color: #145c39; background: #dff3e8; border-radius: 999px; padding: 3px 10px';
+    const off = 'font-size: 12px; font-weight: 700; color: #8a1c12; background: #fde7e4; border-radius: 999px; padding: 3px 10px';
+    const people = [
+      ['jg', 'Joel M. Gaitan', 'ceo@mwendavano.com', 'JG', 'Owner', ['Admin', 'Admin', 'Admin', 'Admin', 'Admin'], true, 'Now', '#2f5e59'],
+      ['s1', '[Staff name]', '[email]', 'S1', 'Customer support', ['Support', 'Support', 'Support', 'View', 'None'], true, '12 min ago', '#7a4a00'],
+      ['s2', '[Staff name]', '[email]', 'S2', 'Sales, shop onboarding', ['Support', 'View', 'None', 'None', 'None'], false, 'Yesterday', '#22396b'],
+      ['s3', '[Staff name]', '[email]', 'S3', 'Cargo operations', ['None', 'None', 'None', 'Admin', 'None'], true, '3 h ago', '#3d4a08']
+    ];
+    const team = people.map(([id, name, email, initials, role, acc, two, seen, color]) => ({
+      name, email, initials, role, seen,
+      two: two ? 'On' : 'Off', twoStyle: two ? on : off,
+      avatar: 'width: 36px; height: 36px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #ffffff; background: ' + color,
+      access: acc.map((a) => ({ label: a, style: A[a] })),
+      rowStyle: 'border-top: 1px solid #e9efec; cursor: pointer; ' + (person === id ? 'background: #f0f6f4' : ''),
+      pick: () => this.setState({ person: person === id ? 'all' : id })
+    }));
+
+    const tag = (bg, fg) => 'font-size: 12px; font-weight: 600; border-radius: 6px; padding: 3px 8px; white-space: nowrap; flex: none; background: ' + bg + '; color: ' + fg;
+    const T = { Mauzo: tag('#dcefee', '#0a4c4c'), Soko: tag('#eef8c7', '#3d4a08'), Wafanyakazi: tag('#fdf0d2', '#7a4a00'), Cargo: tag('#e3eaf8', '#22396b'), Server: tag('#edf1ef', '#33433f') };
+    const events = [
+      ['jg', 'Today 07:52', 'Server', 'Joel added the App Review sign-in to the API settings and restarted dukani-api'],
+      ['s1', 'Today 07:40', 'Mauzo', '[Staff] extended a shop trial by 7 days for [Shop name]'],
+      ['s1', 'Today 07:12', 'Soko', '[Staff] reviewed a reported conversation and blocked [Buyer name]'],
+      ['s3', 'Yesterday 18:05', 'Cargo', '[Staff] marked shipment [number] as arrived in Dar es Salaam'],
+      ['jg', 'Yesterday 16:30', 'Soko', 'Joel published the new Soko privacy policy and terms'],
+      ['s2', 'Yesterday 11:20', 'Mauzo', '[Staff] created a shop account for [Shop name], Kariakoo']
+    ];
+    const log = events.filter((e) => person === 'all' || e[0] === person).map(([, time, system, text]) => ({ time, system, text, sysStyle: T[system] }));
+    const chosen = people.find((p) => p[0] === person);
+    return { team, log, who: chosen ? chosen[1] : 'everyone', noLog: log.length === 0 };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mwendavano Monitor · Overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f3f5f4}
+a{color:#0f6b6b}a:hover{color:#0a4c4c}
+</style>
+</helmet>
+<div style="font-family: 'Inter Tight', system-ui, sans-serif; color: #10211f; background: #f3f5f4; min-height: 100vh; display: flex; flex-wrap: wrap">
+
+  <nav aria-label="Main" style="flex: 1 1 232px; max-width: 100%; background: #0f2624; color: #e7efed; padding: 24px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 0 8px">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #f0b429; color: #0f2624; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px">M</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-weight: 700; font-size: 16px">Mwendavano</span>
+        <span style="font-size: 12px; color: #a9bdb9">Monitor</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: #1d3d3a; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        Overview
+      </a>
+      <a href="Users.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"></path><path d="M16 4.5a4 4 0 0 1 0 7"></path><path d="M19 14.5c1.8 1.1 3 3.4 3 6.5"></path></svg>
+        Users
+      </a>
+      <a href="#visitors" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Visitors
+      </a>
+      <a href="Staff.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M3 13h18"></path></svg>
+        Staff and access
+      </a>
+      <a href="#systems" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"></rect><rect x="3" y="13" width="18" height="7" rx="1.5"></rect><path d="M7 7.5h.01"></path><path d="M7 16.5h.01"></path></svg>
+        Systems
+      </a>
+      <a href="#alerts" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #cfdcd9; text-decoration: none; font-weight: 500; font-size: 15px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+        Alerts
+        <span style="margin-left: auto; background: #f0b429; color: #0f2624; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 8px">5</span>
+      </a>
+    </div>
+    <div style="margin-top: auto; padding: 12px; border-radius: 12px; background: #17322f; display: flex; align-items: center; gap: 12px">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: #2f5e59; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">JG</div>
+      <div style="display: flex; flex-direction: column; min-width: 0">
+        <span style="font-size: 14px; font-weight: 600">Joel M. Gaitan</span>
+        <span style="font-size: 12px; color: #a9bdb9">CEO · Owner</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px clamp(16px, 3vw, 40px) 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #4d5f5c">Monday, 2 November 2026</span>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Good morning, Joel</h1>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <span style="font-size: 12px; font-weight: 600; color: #7a4a00; background: #fdf0d2; border-radius: 999px; padding: 6px 10px">Sample data</span>
+        <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #ffffff; border: 1px solid #d5dfdc; border-radius: 10px; min-width: 240px; box-sizing: border-box">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d5f5c" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</span>
+          <input type="search" placeholder="Search users, shops, phones" style="border: 0; outline: none; font: inherit; font-size: 14px; background: transparent; flex: 1; color: #10211f">
+        </label>
+        <div role="group" aria-label="Period" style="display: flex; background: #e4ebe9; border-radius: 10px; padding: 4px; gap: 4px">
+          <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+            <button type="button" onClick="{{p.pick}}" style="{{p.style}}">{{p.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </header>
+
+    <section aria-label="Key numbers" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="5">
+        <div style="background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 13px; font-weight: 600; color: #4d5f5c">{{k.label}}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 600; letter-spacing: -0.02em">{{k.value}}</span>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+            <span style="{{k.deltaStyle}}">{{k.delta}}</span>
+            <span style="color: #4d5f5c">{{k.note}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section id="systems" aria-labelledby="systems-h" style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+        <h2 id="systems-h" style="margin: 0; font-size: 18px; font-weight: 700">Systems</h2>
+        <span style="font-size: 13px; color: #4d5f5c">Checked every minute · last check 07:58</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+        <sc-for list="{{systems}}" as="s" hint-placeholder-count="5">
+          <article style="background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; align-items: flex-start; gap: 12px">
+              <div style="{{s.markStyle}}">{{s.initials}}</div>
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1">
+                <h3 style="margin: 0; font-size: 15px; font-weight: 700">{{s.name}}</h3>
+                <span style="font-size: 12px; color: #4d5f5c">{{s.domain}}</span>
+              </div>
+              <span style="{{s.statusStyle}}">{{s.status}}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{s.stats}}" as="st" hint-placeholder-count="3">
+                <div style="display: flex; flex-direction: column; gap: 2px">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600">{{st.v}}</span>
+                  <span style="font-size: 12px; color: #4d5f5c">{{st.l}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #4d5f5c; border-top: 1px solid #e9efec; padding-top: 10px">
+              <span>Uptime {{s.uptime}}</span>
+              <span>{{s.deploy}}</span>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px">
+      <section id="visitors" aria-labelledby="visitors-h" style="flex: 2 1 520px; min-width: 0; background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 id="visitors-h" style="margin: 0; font-size: 18px; font-weight: 700">Website visitors</h2>
+            <span style="font-size: 13px; color: #4d5f5c">Unique visitors per day, last 14 days</span>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 13px; color: #10211f">
+            <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #0f6b6b"></span>dukanisoko.com</span>
+            <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #f0b429"></span>dukanimauzo.com</span>
+          </div>
+        </div>
+        <div role="img" aria-label="Bar chart of daily visitors for dukanisoko.com and dukanimauzo.com over the last 14 days" style="height: 220px; display: flex; align-items: flex-end; gap: 10px; border-bottom: 1px solid #dce5e1; padding-bottom: 4px">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="14">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0">
+              <div style="width: 100%; display: flex; align-items: flex-end; gap: 2px; height: 200px">
+                <div style="{{b.a}}"></div>
+                <div style="{{b.b}}"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 11px; color: #4d5f5c">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="14">
+            <span style="flex: 1; text-align: center; min-width: 0">{{b.day}}</span>
+          </sc-for>
+        </div>
+      </section>
+
+      <section aria-labelledby="sources-h" style="flex: 1 1 280px; min-width: 0; background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <h2 id="sources-h" style="margin: 0; font-size: 18px; font-weight: 700">Where visitors come from</h2>
+        <sc-for list="{{sources}}" as="src" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; font-size: 14px">
+              <span>{{src.name}}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">{{src.pct}}</span>
+            </div>
+            <div style="height: 8px; background: #e9efec; border-radius: 999px; overflow: hidden">
+              <div style="{{src.bar}}"></div>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px">
+      <section aria-labelledby="new-h" style="flex: 2 1 520px; min-width: 0; background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 id="new-h" style="margin: 0; font-size: 18px; font-weight: 700">New sign-ups</h2>
+          <a href="Users.dc.html" style="font-size: 14px; font-weight: 600">All users</a>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px">
+            <thead>
+              <tr style="text-align: left; color: #4d5f5c; font-size: 12px">
+                <th style="padding: 8px 8px 8px 0; font-weight: 600">Name</th>
+                <th style="padding: 8px; font-weight: 600">System</th>
+                <th style="padding: 8px; font-weight: 600">Type</th>
+                <th style="padding: 8px; font-weight: 600">Location</th>
+                <th style="padding: 8px 0 8px 8px; font-weight: 600; text-align: right">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{signups}}" as="u" hint-placeholder-count="6">
+                <tr style="border-top: 1px solid #e9efec">
+                  <td style="padding: 12px 8px 12px 0; font-weight: 600">{{u.name}}</td>
+                  <td style="padding: 12px 8px"><span style="{{u.sysStyle}}">{{u.system}}</span></td>
+                  <td style="padding: 12px 8px; color: #33433f">{{u.type}}</td>
+                  <td style="padding: 12px 8px; color: #33433f">{{u.place}}</td>
+                  <td style="padding: 12px 0 12px 8px; color: #4d5f5c; text-align: right; white-space: nowrap">{{u.when}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="alerts" aria-labelledby="alerts-h" style="flex: 1 1 300px; min-width: 0; background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h2 id="alerts-h" style="margin: 0; font-size: 18px; font-weight: 700">Needs attention</h2>
+        <sc-for list="{{alerts}}" as="al" hint-placeholder-count="5">
+          <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #e9efec">
+            <span style="{{al.dot}}"></span>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+              <span style="font-size: 14px; font-weight: 600">{{al.title}}</span>
+              <span style="font-size: 13px; color: #4d5f5c">{{al.detail}}</span>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <section aria-labelledby="server-h" style="background: #ffffff; border: 1px solid #dce5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+        <h2 id="server-h" style="margin: 0; font-size: 18px; font-weight: 700">Server and services</h2>
+        <span style="font-size: 13px; color: #4d5f5c">Contabo VPS · France</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px">
+        <sc-for list="{{services}}" as="sv" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 12px; background: #f6f8f7">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+              <span style="font-size: 14px; font-weight: 600">{{sv.name}}</span>
+              <span style="{{sv.dot}}"></span>
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600">{{sv.value}}</span>
+            <div style="height: 6px; background: #e1e8e6; border-radius: 999px; overflow: hidden">
+              <div style="{{sv.bar}}"></div>
+            </div>
+            <span style="font-size: 12px; color: #4d5f5c">{{sv.note}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { period: '7d' };
+  }
+  renderVals() {
+    const period = this.state.period;
+    const pill = (on) => on
+      ? 'min-height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: #ffffff; color: #10211f; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(16,33,31,0.12)'
+      : 'min-height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: #33433f; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer';
+    const periods = [['today', 'Today'], ['7d', '7 days'], ['30d', '30 days']].map(([id, label]) => ({
+      label, style: pill(period === id), pick: () => this.setState({ period: id })
+    }));
+
+    const K = {
+      today: [['148', '+12%', 'vs yesterday'], ['1,204', '+8%', 'vs yesterday'], ['312', '+3', 'new today'], ['27', '+5', 'vs yesterday'], ['86', '92%', 'of rostered']],
+      '7d': [['964', '+18%', 'vs last week'], ['7,830', '+11%', 'vs last week'], ['312', '+19', 'this week'], ['166', '+24%', 'vs last week'], ['91%', '+2 pts', 'attendance']],
+      '30d': [['3,912', '+31%', 'vs last month'], ['29,450', '+22%', 'vs last month'], ['312', '+61', 'this month'], ['602', '+40%', 'vs last month'], ['89%', '-1 pt', 'attendance']]
+    }[period];
+    const labels = ['New users, all systems', 'Website visitors', 'Active shops', 'Soko orders', 'Staff checked in'];
+    const kpis = labels.map((label, i) => {
+      const [value, delta, note] = K[i];
+      const down = delta.startsWith('-');
+      return {
+        label, value, delta, note,
+        deltaStyle: 'font-weight: 700; border-radius: 6px; padding: 2px 6px; ' + (down ? 'color: #8a1c12; background: #fde7e4' : 'color: #145c39; background: #dff3e8')
+      };
+    });
+
+    const ok = 'font-size: 12px; font-weight: 700; color: #145c39; background: #dff3e8; border-radius: 999px; padding: 4px 10px; white-space: nowrap';
+    const warn = 'font-size: 12px; font-weight: 700; color: #7a4a00; background: #fdf0d2; border-radius: 999px; padding: 4px 10px; white-space: nowrap';
+    const mark = (bg, fg) => 'width: 40px; height: 40px; flex: none; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; background: ' + bg + '; color: ' + fg;
+    const systems = [
+      { name: 'Dukani Mauzo', domain: 'dukanimauzo.com · shops and sales', initials: 'DM', markStyle: mark('#0f6b6b', '#ffffff'), status: 'Online', statusStyle: ok, uptime: '99.98%', deploy: 'Deployed 1 Nov', stats: [{ v: '312', l: 'Shops' }, { v: '1,486', l: 'Sales today' }, { v: '58', l: 'Trials' }] },
+      { name: 'Dukani Soko', domain: 'dukanisoko.com · marketplace', initials: 'DS', markStyle: mark('#131a17', '#d4f04a'), status: 'In App Review', statusStyle: warn, uptime: '99.95%', deploy: 'Deploy pending', stats: [{ v: '2,140', l: 'Buyers' }, { v: '27', l: 'Orders today' }, { v: '14', l: 'Messages' }] },
+      { name: 'Dukani Wafanyakazi', domain: 'Staff attendance and pay', initials: 'DW', markStyle: mark('#f0b429', '#0f2624'), status: 'In App Review', statusStyle: warn, uptime: '99.99%', deploy: 'Build 3 submitted', stats: [{ v: '94', l: 'Workplaces' }, { v: '86', l: 'Checked in' }, { v: '7', l: 'Late' }] },
+      { name: 'Mwendavano Cargo', domain: 'Shipments Dubai to Dar', initials: 'MC', markStyle: mark('#2f4d8a', '#ffffff'), status: 'Online', statusStyle: ok, uptime: '99.97%', deploy: 'Deployed 29 Oct', stats: [{ v: '41', l: 'In transit' }, { v: '6', l: 'Arrived' }, { v: '12', l: 'Customers' }] },
+      { name: 'Global Authentics TZ', domain: 'Shop, WhatsApp and Instagram', initials: 'GA', markStyle: mark('#10211f', '#f0b429'), status: 'Online', statusStyle: ok, uptime: '99.98%', deploy: 'Deployed 1 Nov', stats: [{ v: '139', l: 'Products' }, { v: '6k', l: 'Followers' }, { v: '9', l: 'DMs today' }] }
+    ];
+
+    const days = ['20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '1', '2'];
+    const soko = [310, 342, 298, 365, 402, 455, 390, 420, 488, 512, 470, 545, 602, 580];
+    const mauzo = [180, 195, 170, 210, 230, 205, 160, 220, 240, 260, 250, 270, 290, 285];
+    const max = 650;
+    const bar = (v, c) => 'flex: 1; border-radius: 4px 4px 0 0; background: ' + c + '; height: ' + Math.round(v / max * 200) + 'px';
+    const bars = days.map((day, i) => ({ day, a: bar(soko[i], '#0f6b6b'), b: bar(mauzo[i], '#f0b429') }));
+
+    const sources = [['Instagram', 46], ['Google search', 22], ['WhatsApp links', 18], ['Direct', 9], ['Facebook', 5]].map(([name, p]) => ({
+      name, pct: p + '%', bar: 'height: 100%; border-radius: 999px; background: #0f6b6b; width: ' + p * 2 + '%'
+    }));
+
+    const tag = (bg, fg) => 'font-size: 12px; font-weight: 600; border-radius: 6px; padding: 3px 8px; white-space: nowrap; background: ' + bg + '; color: ' + fg;
+    const T = { Mauzo: tag('#dcefee', '#0a4c4c'), Soko: tag('#eef8c7', '#3d4a08'), Wafanyakazi: tag('#fdf0d2', '#7a4a00'), Cargo: tag('#e3eaf8', '#22396b') };
+    const signups = [
+      ['[Shop name]', 'Mauzo', 'Shop owner · trial', 'Kariakoo, Dar', '2 min ago'],
+      ['[Buyer name]', 'Soko', 'Buyer', 'Sinza, Dar', '9 min ago'],
+      ['[Worker name]', 'Wafanyakazi', 'Worker', 'Mbezi, Dar', '21 min ago'],
+      ['[Shop name]', 'Mauzo', 'Shop owner · paid', 'Arusha', '48 min ago'],
+      ['[Customer name]', 'Cargo', 'Customer', 'Mwanza', '1 h ago'],
+      ['[Buyer name]', 'Soko', 'Buyer', 'Dodoma', '2 h ago']
+    ].map(([name, system, type, place, when]) => ({ name, system, type, place, when, sysStyle: T[system] }));
+
+    const dot = (c) => 'width: 10px; height: 10px; flex: none; margin-top: 5px; border-radius: 50%; background: ' + c;
+    const alerts = [
+      ['Soko website deploy pending', 'New privacy and terms pages are not live on dukanisoko.com yet', '#b42318'],
+      ['Soko 1.0 (10) waiting for upload', 'Upload from Xcode, then submit for App Review', '#c27a00'],
+      ['Wafanyakazi build 3 in App Review', 'Resubmitted with video and test logins', '#c27a00'],
+      ['D-U-N-S request for Mwendavano Holdings', 'New request sent to D&B, waiting for reply', '#c27a00'],
+      ['Beem SMS credit', '[balance] SMS left · top up before it runs out', '#c27a00']
+    ].map(([title, detail, c]) => ({ title, detail, dot: dot(c) }));
+
+    const svc = (name, value, pct, note, c) => ({
+      name, value, note,
+      dot: 'width: 10px; height: 10px; border-radius: 50%; background: ' + c,
+      bar: 'height: 100%; border-radius: 999px; background: ' + c + '; width: ' + pct + '%'
+    });
+    const services = [
+      svc('API (dukani-api)', '142 ms', 28, 'Average response, last hour', '#1f7a4d'),
+      svc('Database', '38 / 100', 38, 'Connections in use', '#1f7a4d'),
+      svc('Disk', '61%', 61, '122 GB of 200 GB', '#1f7a4d'),
+      svc('Memory', '72%', 72, '5.8 GB of 8 GB', '#c27a00'),
+      svc('SMS (Beem)', '[balance]', 20, 'Sign-in codes and receipts', '#c27a00'),
+      svc('Push (Firebase)', '99.6%', 99, 'Delivered, last 24 h', '#1f7a4d')
+    ];
+
+    return { periods, kpis, systems, bars, sources, signups, alerts, services };
+  }
+}
+</script>
+</body>
+</html>
