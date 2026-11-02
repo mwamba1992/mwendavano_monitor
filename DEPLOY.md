@@ -49,18 +49,13 @@ Sign in at the address above with the phone and that password. The Monitor asks 
 
 ## Turn on visitor numbers
 
-All the sites write to the shared `/var/log/nginx/access.log` today, in a format with no site name, so visitors cannot be split by site. This is a change to other apps' nginx sites, so it needs its own OK. Add one line to the main `server` block of each site:
+All the sites write to the shared `/var/log/nginx/access.log`, in a format with no site name, so visitors cannot be split by site. This script gives each site its own log. It backs up the configs, and restores them if `nginx -t` fails:
 
-| Site config | Line |
-|---|---|
-| `dukanisoko.com` | `access_log /var/log/nginx/dukanisoko.com.access.log;` |
-| `dukanimauzo` | `access_log /var/log/nginx/dukanimauzo.com.access.log;` |
-| `store.mwendavano.com` | `access_log /var/log/nginx/store.mwendavano.com.access.log;` |
-| `cargo.mwendavano.com` | `access_log /var/log/nginx/cargo.mwendavano.com.access.log;` |
-| `wafanyakazi` | `access_log /var/log/nginx/wafanyakazi.mwendavano.com.access.log;` |
-| `mwendavano.com` | `access_log /var/log/nginx/mwendavano.com.access.log;` |
+```bash
+bash /var/www/mwendavano-monitor/deploy/add-visitor-logs.sh
+```
 
-Put it in the HTTPS `server` block, which certbot manages, then `nginx -t && systemctl reload nginx`. The stock logrotate rule for `/var/log/nginx/*.log` already covers these files. Numbers start from that moment; history in the shared log cannot be split.
+The stock logrotate rule for `/var/log/nginx/*.log` already covers the new files. Numbers start from that moment; history in the shared log cannot be split.
 
 ## Updates
 

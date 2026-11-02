@@ -12,7 +12,7 @@ import { isProductionEnv } from '../common/security';
 import { LogOffset, VisitorDaily } from '../entities';
 import { addVisitor, classifyReferrer, countSketch, isPageView, mergeSketch, newSketch, parseLine, SOURCES } from './log-parser';
 
-/** One access_log per public site: see deploy/nginx/site-logs.md. Those names are this table. */
+/** One access_log per public site: see deploy/add-visitor-logs.sh. Those names are this table. */
 export const SITES: { site: string; system: SystemKey }[] = [
   { site: 'dukanisoko.com', system: 'soko' },
   { site: 'dukanimauzo.com', system: 'mauzo' },
