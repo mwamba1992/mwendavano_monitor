@@ -45,9 +45,20 @@ export class ChecksService {
   };
   probeService: ProbeService = (name) => run('systemctl', ['is-active', name]);
 
-  constructor(private readonly ds: DataSource) {}
+  constructor(private readonly ds: DataSource) {
+    // Local development only: everything answers, so the panel stays alive without touching a real site.
+    if (this.simulated) {
+      this.probeHttp = async () => ({ status: 200, ms: 110 + Math.round(Math.random() * 90) });
+      this.probeService = async () => 'active';
+    }
+  }
+
+  private get simulated() {
+    return process.env.HEALTH_SIMULATE === 'true' && !isProductionEnv();
+  }
 
   get enabled() {
+    if (this.simulated) return true;
     return process.env.HEALTH_CHECKS_ENABLED ? process.env.HEALTH_CHECKS_ENABLED === 'true' : isProductionEnv();
   }
 

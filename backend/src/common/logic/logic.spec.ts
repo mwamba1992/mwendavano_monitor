@@ -1,4 +1,5 @@
 import { canManageStaff, canRevealPhone, canSeeNumbers, canSeePeople, fullAccess, levelOf, noAccess, parseAccess, staffEditProblem } from '../../access/access';
+import { ChecksService } from '../../health/checks.service';
 import { cardStatus } from '../../health/targets';
 import { dayWindows, eatDate, eatDayStart, periodRange } from './time';
 import { productionConfigProblems } from '../security';
@@ -101,4 +102,26 @@ describe('production config', () => {
   it('accepts a safe setup', () => expect(productionConfigProblems(good)).toEqual([]));
   it('refuses a system DB user', () => expect(productionConfigProblems({ ...good, RO_DB_USERNAME: 'cargo' }).join()).toMatch(/monitor_ro/));
   it('refuses placeholder secrets', () => expect(productionConfigProblems({ ...good, JWT_SECRET: 'change-me'.padEnd(40, 'x') }).length).toBe(1));
+});
+
+describe('simulated health checks', () => {
+  const saved = { NODE_ENV: process.env.NODE_ENV, HEALTH_SIMULATE: process.env.HEALTH_SIMULATE, HEALTH_CHECKS_ENABLED: process.env.HEALTH_CHECKS_ENABLED };
+  afterEach(() => Object.assign(process.env, saved));
+
+  const start = (nodeEnv: string) => {
+    Object.assign(process.env, { NODE_ENV: nodeEnv, HEALTH_SIMULATE: 'true', HEALTH_CHECKS_ENABLED: 'false' });
+    return new ChecksService({} as never);
+  };
+
+  it('answers healthy locally', async () => {
+    const checks = start('development');
+    expect(checks.enabled).toBe(true);
+    await expect(checks.probeService('nginx')).resolves.toBe('active');
+  });
+
+  it('never fakes a result in production', () => {
+    const checks = start('production');
+    expect(checks.enabled).toBe(false);
+    expect(String(checks.probeService)).toContain('systemctl');
+  });
 });
