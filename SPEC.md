@@ -99,7 +99,6 @@ Each file is HTML. The `renderVals()` script at the bottom holds the sample data
   - service down
   - disk over 80%
   - memory over 85%
-  - SMS balance low
   - Mauzo trial ending in 24 h with no payment
   - an unreviewed Soko chat report
   - plus manual notes staff can add
@@ -108,8 +107,7 @@ Each file is HTML. The `renderVals()` script at the bottom holds the sample data
   - DB connections in use
   - disk
   - memory
-  - SMS balance (Beem)
-  - push delivery (if measurable; otherwise drop this tile)
+  - server load
 
 **Users** (`/users`)
 - Total cards per system, which also act as a filter.
@@ -119,7 +117,7 @@ Each file is HTML. The `renderVals()` script at the bottom holds the sample data
 - Paginated (50 rows) and exportable to CSV.
 
 **Staff and access** (`/staff`)
-- Team table: each Monitor staff member's role, per-system access (Admin / Support / View / None), whether two-step login is on, and last seen.
+- Team table: each Monitor staff member's role, per-system access (Admin / Support / View / None) and last seen.
 - Invite staff (Admin only).
 - Activity log of every staff action inside the Monitor (logins, exports, viewing a full phone number, settings changes). Filter it by person.
 
@@ -129,7 +127,7 @@ Use the same stack as Cargo and Wafanyakazi, so it is deployed the same way.
 
 ```
 mwendavano-monitor/
-  backend/   NestJS 11 + TypeORM, port 3201, systemd "monitor-api"
+  backend/   NestJS 11 + TypeORM, port 3202, systemd "monitor-api" (3201 is Cargo)
   web/       Vue 3 + Vite SPA, built to web/dist
   deploy/    nginx site, systemd unit, DEPLOY.md
   design/    the three design files (reference only)
@@ -194,7 +192,7 @@ mwendavano-monitor/
   - each API's health route (use one if it exists; otherwise a cheap public GET)
 - **`systemctl is-active`** for `dukani-api`, `dukani-soko`, `wafanyakazi-api`, `cargo-api`, `nginx`, `postgresql`. The Monitor runs on the same box, so it can run this through `child_process` with a fixed allow-list of names. Never pass user input to it.
 - **Server:** disk from `df` / `statfs`, memory and load from `os`, and DB connections from `pg_stat_activity`.
-- **Beem SMS balance** from Beem's vendor balance API, using the existing Beem key from the server env (read it from the Monitor's own `.env`; do not read other apps' `.env` files). Verify the endpoint in Beem's docs.
+- The Monitor does not call Beem (owner's decision, 2 Nov 2026): no SMS balance and no SMS codes.
 - **Last deploy:** `git -C <app dir> log -1 --format=%cI` for each app directory.
 
 ### Visitors (no tracking scripts)
@@ -208,8 +206,7 @@ mwendavano-monitor/
 - Check the actual log names and formats in the nginx site configs on the server first. If the sites share one log, add a site-specific `access_log` (that is a deploy step, so ask first).
 
 ### Auth and roles
-- Staff sign in with phone + password (bcrypt) and a second step: an SMS code through Beem, or a TOTP app.
-- Two-step login is **required** for Admin.
+- Staff sign in with phone + password (bcrypt) only, with no second step (owner's decision, 2 Nov 2026).
 - Use a short-lived JWT plus a refresh token in an httpOnly cookie.
 - Lock the account for 15 minutes after 5 failed attempts (Cargo has a `lockouts` pattern to reuse).
 - Roles per system: **Admin** (everything, including manage staff and see full phone numbers), **Support** (see users and details), **View** (numbers only, no personal data), **None**.
@@ -218,7 +215,7 @@ mwendavano-monitor/
 
 ### API (sketch)
 ```
-POST /api/auth/login, /api/auth/verify, /api/auth/refresh, /api/auth/logout
+POST /api/auth/login, /api/auth/refresh, /api/auth/logout
 GET  /api/overview?period=today|7d|30d
 GET  /api/systems
 GET  /api/visitors?days=14
@@ -250,7 +247,7 @@ Cache overview queries for 60 s. The panel should load in under 1 s.
 2. **Overview**: KPIs, systems cards and health checks, server tiles, new sign-ups, alerts.
 3. **Users**: list, filters, search, masking, CSV export.
 4. **Visitors**: the log parser, aggregates, and the chart and sources on Overview.
-5. **Staff and access**: invite, roles per system, two-step login, activity log.
+5. **Staff and access**: invite, roles per system, activity log.
 6. **Deploy**: `deploy/nginx/monitor.mwendavano.com.conf`, `deploy/systemd/monitor-api.service`, the `monitor_ro` role SQL, certbot, and DEPLOY.md. Run it only after the owner says "deploy".
 
 ## 6. Done means

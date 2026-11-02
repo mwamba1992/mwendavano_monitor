@@ -37,7 +37,7 @@ button, input, select { font: inherit; }
 .head-text { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
 .head-text h1 { color: var(--ink); }
 .head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.search { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #fff; border: 1px solid #d5dfdc; border-radius: 10px; min-width: 240px; }
+.search { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #fff; border: 1px solid #d5dfdc; border-radius: 10px; min-width: 280px; }
 .search input { border: 0; outline: none; font-size: 14px; background: transparent; flex: 1; color: var(--ink); min-width: 0; }
 .search:focus-within { outline: 2px solid var(--teal); outline-offset: 1px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -147,5 +147,4 @@ tr.picked td { background: #f0f6f4; }
 .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
 .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--side); }
 .login .dialog { padding: 28px; }
-.qr { width: 180px; height: 180px; align-self: center; }
 .notice { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; }

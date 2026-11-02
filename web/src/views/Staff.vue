@@ -77,7 +77,7 @@ onMounted(() => Promise.all([loadTeam(), loadLog()]))
     <div class="section-head"><h2 id="team-h">Team</h2><span class="hint">Tap a person to see their activity</span></div>
     <div class="scroll">
       <table style="min-width: 900px">
-        <thead><tr><th>Person</th><th>Role</th><th v-for="s in SYSTEMS" :key="s" class="center">{{ SYSTEM_LABEL[s] }}</th><th>Two-step login</th><th>Last seen</th><th /></tr></thead>
+        <thead><tr><th>Person</th><th>Role</th><th v-for="s in SYSTEMS" :key="s" class="center">{{ SYSTEM_LABEL[s] }}</th><th>Last seen</th><th /></tr></thead>
         <tbody>
           <tr v-for="(t, i) in team" :key="t.id" :class="{ picked: person === t.id }">
             <td>
@@ -88,7 +88,6 @@ onMounted(() => Promise.all([loadTeam(), loadLog()]))
             </td>
             <td>{{ t.jobRole }}<template v-if="!t.active"> · off</template></td>
             <td v-for="s in SYSTEMS" :key="s" class="center"><span class="lvl" :class="`lvl-${t.access[s]}`">{{ LEVEL_LABEL[t.access[s]] }}</span></td>
-            <td><span class="pill" :class="{ bad: !t.twoFactorMethod }">{{ t.twoFactorMethod ? 'On' : 'Off' }}</span></td>
             <td class="nowrap">{{ timeAgo(t.lastSeenAt) }}</td>
             <td><button v-if="canEdit(t)" type="button" class="linkbtn" @click="openEdit(t)">Edit</button></td>
           </tr>
@@ -126,14 +125,13 @@ onMounted(() => Promise.all([loadTeam(), loadLog()]))
           <select v-model="form.access[s]"><option v-for="l in levelsFor(s)" :key="l" :value="l">{{ LEVEL_LABEL[l] }}</option></select>
         </label>
       </div>
-      <p class="hint">Anyone with Admin on a system must use two-step login. Admin on Server also lets them manage staff.</p>
+      <p class="hint">Admin on Server also lets them manage staff.</p>
       <div class="buttons">
         <button class="btn primary">{{ editing === 0 ? 'Send invite' : 'Save' }}</button>
         <button type="button" class="btn" @click="editing = null">Cancel</button>
       </div>
       <div v-if="editing !== 0" class="buttons">
         <button type="button" class="btn" @click="action({ resetPassword: true })">Reset password</button>
-        <button type="button" class="btn" @click="action({ resetTwoStep: true })">Reset two-step</button>
         <button type="button" class="btn" @click="action({ active: !target?.active })">{{ target?.active ? 'Turn account off' : 'Turn account on' }}</button>
       </div>
     </form>

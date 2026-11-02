@@ -47,7 +47,7 @@ systemctl restart monitor-api
 npm run seed:owner:prod -- --phone <phone> --name "<name>"
 ```
 
-Sign in at the address above. With no Beem keys in `.env`, Admin sign-in shows a QR code for an authenticator app.
+Sign in at the address above with the phone and that password. The Monitor asks for a new password at first sign-in.
 
 ## Turn on visitor numbers
 

@@ -60,7 +60,6 @@ DB_USERNAME=monitor
 DB_PASSWORD=$DB_PASS
 DB_DATABASE=mwendavano_monitor
 JWT_SECRET=$(openssl rand -hex 32)
-SECRETS_KEY=$(openssl rand -hex 32)
 RO_DB_USERNAME=monitor_ro
 RO_DB_PASSWORD=$RO_PASS
 RO_DB_INVENTORY=inventorydb
@@ -68,10 +67,6 @@ RO_DB_WAFANYAKAZI=wafanyakazi
 RO_DB_CARGO=mwendavano_cargo
 # The Soko App Review phone: set it, then systemctl restart monitor-api
 REVIEW_PHONE=
-# Optional, for SMS sign-in codes. Without them staff use an authenticator app.
-BEEM_API_KEY=
-BEEM_SECRET_KEY=
-BEEM_SENDER_ID=
 ENV
   )
   chmod 600 .env

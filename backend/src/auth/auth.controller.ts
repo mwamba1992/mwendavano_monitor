@@ -9,18 +9,10 @@ class LoginDto {
   @IsString() @MaxLength(30) phone: string;
   @IsString() @MaxLength(200) password: string;
 }
-class VerifyDto {
-  @IsString() @MaxLength(2000) challenge: string;
-  @IsString() @MaxLength(10) code: string;
-}
 class PasswordDto {
   @IsString() @MaxLength(200) current: string;
   @IsString() @MaxLength(200) next: string;
 }
-class CodeDto {
-  @IsString() @MaxLength(10) code: string;
-}
-
 const cookieOptions = () => ({ httpOnly: true, secure: isProductionEnv(), sameSite: 'strict' as const, path: '/api/auth' });
 
 function readCookie(req: Request): string | undefined {
@@ -47,11 +39,6 @@ export class AuthController {
     return this.send(res, await this.auth.login(b.phone, b.password, ip));
   }
 
-  @Public() @Post('verify') @HttpCode(200)
-  async verify(@Body() b: VerifyDto, @ClientIp() ip: string | null, @Res({ passthrough: true }) res: Response) {
-    return this.send(res, await this.auth.verify(b.challenge, b.code, ip));
-  }
-
   @Public() @Post('refresh') @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     return this.send(res, await this.auth.refresh(readCookie(req)));
@@ -72,26 +59,6 @@ export class AuthController {
   @AllowTempPassword() @Post('password') @HttpCode(200)
   password(@CurrentStaff() s: AuthStaff, @Body() b: PasswordDto, @ClientIp() ip: string | null) {
     return this.auth.changePassword(s, b.current, b.next, ip);
-  }
-
-  @Post('two-step/app') @HttpCode(200)
-  setupApp(@CurrentStaff() s: AuthStaff) {
-    return this.auth.setupApp(s);
-  }
-
-  @Post('two-step/app/confirm') @HttpCode(200)
-  confirmApp(@CurrentStaff() s: AuthStaff, @Body() b: CodeDto, @ClientIp() ip: string | null) {
-    return this.auth.confirmApp(s, b.code, ip);
-  }
-
-  @Post('two-step/sms') @HttpCode(200)
-  useSms(@CurrentStaff() s: AuthStaff, @ClientIp() ip: string | null) {
-    return this.auth.useSms(s, ip);
-  }
-
-  @Post('two-step/off') @HttpCode(200)
-  off(@CurrentStaff() s: AuthStaff, @ClientIp() ip: string | null) {
-    return this.auth.turnOff(s, ip);
   }
 }
 

@@ -18,10 +18,3 @@ export function normalizePhone(raw: string | null | undefined): string | null {
   if (/^255[67]\d{8}$/.test(d)) return `+${d}`;
   return null;
 }
-
-export const phoneDigits = (p: string) => p.replace(/\D/g, '');
-export const last4 = (p: string) => phoneDigits(p).slice(-4);
-export const maskPhone = (p: string) => (p.length > 7 ? `${p.slice(0, 7)}***${p.slice(-2)}` : '***');
-
-/** Selcom and Beem want 255XXXXXXXXX. */
-export const msisdn = (p: string) => phoneDigits(p);

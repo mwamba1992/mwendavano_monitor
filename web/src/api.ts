@@ -11,11 +11,8 @@ export interface Me {
   jobRole: string
   isOwner: boolean
   access: Record<SystemKey, Level>
-  twoFactorMethod: 'sms' | 'totp' | null
   mustChangePassword: boolean
   canManageStaff: boolean
-  twoStepRequired: boolean
-  smsAvailable: boolean
 }
 
 export const session = reactive<{ me: Me | null; token: string | null; alerts: number }>({ me: null, token: null, alerts: 0 })

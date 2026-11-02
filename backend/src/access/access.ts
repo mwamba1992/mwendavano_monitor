@@ -42,9 +42,6 @@ export const canSeePeople = (a: Actor, s: SystemKey) => ['admin', 'support'].inc
 export const canRevealPhone = (a: Actor, s: SystemKey) => levelOf(a, s) === 'admin';
 export const canAddNote = (a: Actor, s: SystemKey) => canSeePeople(a, s);
 
-/** Admin on anything means two-step login is compulsory. */
-export const requiresTwoStep = (a: Actor) => SYSTEMS.some((s) => levelOf(a, s) === 'admin');
-
 /**
  * Staff management reaches across every system, so being Admin of one system is not enough:
  * it takes the owner or an Admin on Server.

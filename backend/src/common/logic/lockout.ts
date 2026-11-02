@@ -1,6 +1,6 @@
 /**
  * Brute-force lockout (pure logic). After MAX_FAILURES wrong guesses within WINDOW_MS the key is
- * locked for LOCK_MS. Keys: `login:<phone>` and `verify:<staffId>`.
+ * locked for LOCK_MS. Keys: `login:<phone>` and `password:<staffId>`.
  */
 export const MAX_FAILURES = 5;
 export const LOCK_MS = 15 * 60_000;

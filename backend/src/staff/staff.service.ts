@@ -24,7 +24,6 @@ export interface PatchInput {
   jobRole?: string;
   access?: unknown;
   active?: boolean;
-  resetTwoStep?: boolean;
   resetPassword?: boolean;
 }
 
@@ -52,7 +51,7 @@ export class StaffService {
   }
 
   private view(s: Staff) {
-    return { id: s.id, name: s.name, phone: s.phone, email: s.email, jobRole: s.jobRole, isOwner: s.isOwner, active: s.active, access: s.isOwner ? Object.fromEntries(SYSTEMS.map((k) => [k, levelOf(s, k)])) : s.access, twoFactorMethod: s.twoFactorMethod, lastSeenAt: s.lastSeenAt };
+    return { id: s.id, name: s.name, phone: s.phone, email: s.email, jobRole: s.jobRole, isOwner: s.isOwner, active: s.active, access: s.isOwner ? Object.fromEntries(SYSTEMS.map((k) => [k, levelOf(s, k)])) : s.access, lastSeenAt: s.lastSeenAt };
   }
 
   async list(a: AuthStaff) {
@@ -101,11 +100,6 @@ export class StaffService {
       changes.active = b.active;
       said.push(b.active ? 'turned the account on' : 'turned the account off');
     }
-    if (b.resetTwoStep) {
-      changes.twoFactorMethod = null;
-      changes.totpSecret = null;
-      said.push('reset two-step login');
-    }
     let temporaryPassword: string | undefined;
     if (b.resetPassword) {
       temporaryPassword = tempPassword();
@@ -113,7 +107,7 @@ export class StaffService {
       changes.mustChangePassword = true;
       said.push('reset the password');
     }
-    if (b.active === false || b.resetPassword || b.resetTwoStep) {
+    if (b.active === false || b.resetPassword) {
       changes.tokenVersion = s.tokenVersion + 1;
       await this.auth.revokeAll(s.id);
     }

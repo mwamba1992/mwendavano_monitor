@@ -10,7 +10,6 @@ import { DataSource } from 'typeorm';
 import { AccessMap, fullAccess, noAccess } from '../access/access';
 import { configureApp } from '../common/http-setup';
 import { normalizePhone } from '../common/logic/phone';
-import { totpAt, base32Decode } from '../common/logic/totp';
 import { ActivityLog, LogOffset, Staff, UptimeCheck, VisitorDaily } from '../entities';
 import { ChecksService } from '../health/checks.service';
 import { SourcesService } from '../sources/sources.service';
@@ -25,7 +24,6 @@ Object.assign(process.env, {
   NODE_ENV: 'test',
   DB_DATABASE: 'mwendavano_monitor_test',
   JWT_SECRET: 'test-secret-test-secret-test-secret',
-  SECRETS_KEY: 'test-key-test-key-test-key-test-key',
   RO_DB_USERNAME: 'monitor_ro',
   RO_DB_PASSWORD: RO_PASSWORD,
   RO_DB_INVENTORY: sources.inventory,
@@ -36,7 +34,6 @@ Object.assign(process.env, {
   VISITOR_PARSER_ENABLED: 'false',
   NGINX_LOG_DIR: logDir,
 });
-delete process.env.BEEM_API_KEY;
 
 describe('Monitor end to end', () => {
   let app: NestExpressApplication;
@@ -69,12 +66,9 @@ describe('Monitor end to end', () => {
     await makeStaff('0711100001', 'Owner Mkuu', fullAccess(), { isOwner: true });
     await makeStaff('0711100002', 'View Mtu', { ...noAccess(), soko: 'view', mauzo: 'view' });
     await makeStaff('0711100003', 'Support Mtu', { ...noAccess(), mauzo: 'support', soko: 'support', wafanyakazi: 'support' });
-    await makeStaff('0711100004', 'Cargo Admin', { ...noAccess(), cargo: 'admin' }, { twoFactorMethod: 'sms' });
     tokens.view = (await login('0711100002')).accessToken;
     tokens.support = (await login('0711100003')).accessToken;
-    const first = await login('0711100001');
-    expect(first.step).toBe('sms');
-    tokens.owner = (await request(http).post('/api/auth/verify').send({ challenge: first.challenge, code: first.devCode }).expect(200)).body.accessToken;
+    tokens.owner = (await login('0711100001')).accessToken;
   });
 
   afterAll(async () => {
@@ -120,31 +114,13 @@ describe('Monitor end to end', () => {
       for (let i = 0; i < 5; i++) await request(http).post('/api/auth/login').send({ phone: '0711100009', password: 'nope' });
       await request(http).post('/api/auth/login').send({ phone: '0711100009', password: PASSWORD }).expect(429);
     });
-    it('an Admin cannot sign in without the second step', async () => {
-      await makeStaff('0711100013', 'Second Step', { ...noAccess(), cargo: 'admin' });
-      const r = await login('0711100013');
-      expect(r.accessToken).toBeUndefined();
-      expect(r.step).toBe('sms');
-      await request(http).post('/api/auth/verify').send({ challenge: r.challenge, code: '000000' }).expect(400);
+    it('phone and password are enough, for an Admin too', async () => {
+      const r = await login('0711100001');
+      expect(r.accessToken).toBeTruthy();
+      expect(r.staff.isOwner).toBe(true);
     });
-    it('a challenge token is not an access token', async () => {
-      const r = await login('0711100004');
-      await request(http).get('/api/overview').set('Authorization', `Bearer ${r.challenge}`).expect(401);
-    });
-    it('an Admin with no SMS in production enrols an app', async () => {
-      await makeStaff('0711100012', 'Enrol Mtu', { ...noAccess(), soko: 'admin' });
-      process.env.NODE_ENV = 'production';
-      try {
-        const r = await login('0711100012');
-        expect(r.step).toBe('enroll');
-        expect(r.devCode).toBeUndefined();
-        const code = totpAt(r.secret, Math.floor(Date.now() / 30000));
-        expect(base32Decode(r.secret).length).toBe(20);
-        const done = await request(http).post('/api/auth/verify').send({ challenge: r.challenge, code }).expect(200);
-        expect(done.body.staff.twoFactorMethod).toBe('totp');
-      } finally {
-        process.env.NODE_ENV = 'test';
-      }
+    it('the second-step routes are gone', async () => {
+      await request(http).post('/api/auth/verify').send({ challenge: 'x', code: '123456' }).expect(404);
     });
     it('sets the refresh token only as an httpOnly cookie, and rotates it', async () => {
       await makeStaff('0711100010', 'Cookie Mtu', noAccess());
@@ -246,9 +222,8 @@ describe('Monitor end to end', () => {
       expect(first.body.staff.mustChangePassword).toBe(true);
     });
     it('nobody but the owner can change the owner or give Admin on Server', async () => {
-      const mgr = await makeStaff('0711100040', 'Meneja Mtu', { ...noAccess(), server: 'admin' }, { twoFactorMethod: 'sms' });
-      const c = await login('0711100040');
-      const t = (await request(http).post('/api/auth/verify').send({ challenge: c.challenge, code: c.devCode }).expect(200)).body.accessToken;
+      const mgr = await makeStaff('0711100040', 'Meneja Mtu', { ...noAccess(), server: 'admin' });
+      const t = (await login('0711100040')).accessToken;
       const auth = { Authorization: `Bearer ${t}` };
       const owner = await ds.getRepository(Staff).findOneByOrFail({ isOwner: true });
       await request(http).patch(`/api/staff/${owner.id}`).set(auth).send({ active: false }).expect(403);

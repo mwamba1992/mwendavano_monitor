@@ -10,13 +10,11 @@
     "type-check": "vue-tsc -b"
   },
   "dependencies": {
-    "qrcode": "^1.5.4",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "@types/qrcode": "^1.5.5",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.8.3",

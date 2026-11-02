@@ -1,13 +1,10 @@
-import { BadRequestException, CanActivate, createParamDecorator, ExecutionContext, Global, HttpException, HttpStatus, Injectable, Logger, Module, SetMetadata, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, createParamDecorator, ExecutionContext, Global, HttpException, HttpStatus, Injectable, Module, SetMetadata, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtModule, JwtService } from '@nestjs/jwt';
-import { DataSource, IsNull, LessThan } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Actor } from '../access/access';
-import { ActivityLog, Lockout, OtpCode, Staff } from '../entities';
+import { ActivityLog, Lockout, Staff } from '../entities';
 import { isLocked, LOCKED_MESSAGE, normalizeLockState, registerFailure } from './logic/lockout';
-import { checkOtp, generateOtp, hashOtp, OTP_INVALID_MESSAGE, OTP_MAX_ATTEMPTS, OTP_TTL_MS, otpRateLimit } from './logic/otp';
-import { maskPhone, msisdn } from './logic/phone';
-import { secretsKey } from './security';
 
 export interface AuthStaff extends Actor {
   id: number;
@@ -97,68 +94,6 @@ export class LockoutService {
   }
 }
 
-@Injectable()
-export class OtpService {
-  constructor(private readonly ds: DataSource) {}
-
-  async create(phone: string, purpose: string, now: Date = new Date()): Promise<string> {
-    const repo = this.ds.getRepository(OtpCode);
-    const recent = await repo.find({ where: { phone, purpose }, order: { createdAt: 'DESC' }, take: 10 });
-    const limited = otpRateLimit(recent.map((r) => r.createdAt), now);
-    if (limited) throw new HttpException({ statusCode: 429, message: limited, error: 'Too Many Requests' }, HttpStatus.TOO_MANY_REQUESTS);
-    const code = generateOtp();
-    await repo.update({ phone, purpose, consumedAt: IsNull() }, { consumedAt: now });
-    await repo.save(repo.create({ phone, purpose, codeHash: hashOtp(code, phone, purpose, secretsKey()), expiresAt: new Date(now.getTime() + OTP_TTL_MS), attempts: 0, consumedAt: null, createdAt: now }));
-    repo.delete({ createdAt: LessThan(new Date(now.getTime() - 24 * 3600_000)) }).catch(() => undefined);
-    return code;
-  }
-
-  /** Consumes the newest code; wrong tries count. */
-  async check(phone: string, purpose: string, code: string, now: Date = new Date()): Promise<boolean> {
-    return this.ds.transaction(async (m) => {
-      const row = await m.findOne(OtpCode, { where: { phone, purpose, consumedAt: IsNull() }, order: { id: 'DESC' }, lock: { mode: 'pessimistic_write' } });
-      const r = checkOtp(row, hashOtp(code, phone, purpose, secretsKey()), now);
-      if (!row) return false;
-      if (r === 'ok') await m.update(OtpCode, { id: row.id }, { consumedAt: now });
-      else if (r === 'wrong') {
-        const attempts = row.attempts + 1;
-        await m.update(OtpCode, { id: row.id }, attempts >= OTP_MAX_ATTEMPTS ? { attempts, consumedAt: now } : { attempts });
-      }
-      return r === 'ok';
-    });
-  }
-}
-
-export const otpInvalid = () => new BadRequestException(OTP_INVALID_MESSAGE);
-
-/** SMS sign-in codes through Beem. Optional: with no keys, staff use an authenticator app. Never throws. */
-@Injectable()
-export class SmsService {
-  private readonly log = new Logger(SmsService.name);
-
-  get enabled(): boolean {
-    return !!process.env.BEEM_API_KEY?.trim() && !!process.env.BEEM_SECRET_KEY?.trim();
-  }
-
-  async send(phone: string, message: string): Promise<boolean> {
-    if (!this.enabled) return false;
-    try {
-      const auth = Buffer.from(`${process.env.BEEM_API_KEY!.trim()}:${process.env.BEEM_SECRET_KEY!.trim()}`).toString('base64');
-      const res = await fetch('https://apisms.beem.africa/v1/send', {
-        method: 'POST',
-        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source_addr: (process.env.BEEM_SENDER_ID ?? '').trim() || 'INFO', encoding: 0, message, recipients: [{ recipient_id: 1, dest_addr: msisdn(phone) }] }),
-        signal: AbortSignal.timeout(15_000),
-      });
-      if (!res.ok) this.log.error(`Beem SMS failed (${res.status}) for ${maskPhone(phone)}`);
-      return res.ok;
-    } catch (e: any) {
-      this.log.error(`Beem SMS error for ${maskPhone(phone)}: ${e?.message ?? e}`);
-      return false;
-    }
-  }
-}
-
 export interface ActivityInput {
   staffId: number | null;
   staffName: string;
@@ -181,7 +116,7 @@ export class ActivityService {
 @Global()
 @Module({
   imports: [JwtModule.registerAsync({ global: true, useFactory: () => ({ secret: process.env.JWT_SECRET || 'dev-only-secret-not-for-production', signOptions: { expiresIn: '15m' } }) })],
-  providers: [LockoutService, OtpService, SmsService, ActivityService],
-  exports: [LockoutService, OtpService, SmsService, ActivityService],
+  providers: [LockoutService, ActivityService],
+  exports: [LockoutService, ActivityService],
 })
 export class CoreModule {}

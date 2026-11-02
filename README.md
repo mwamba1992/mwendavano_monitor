@@ -16,15 +16,13 @@ Needs a local Postgres. All data here is made up; nothing connects to production
 ```bash
 createdb mwendavano_monitor
 cd backend && npm install
-cp .env.example .env          # set DB_USERNAME, JWT_SECRET, SECRETS_KEY, RO_DB_PASSWORD=local-only-monitor-ro
+cp .env.example .env          # set DB_USERNAME, JWT_SECRET, RO_DB_PASSWORD=local-only-monitor-ro
 npm run seed:dev              # made-up source databases, uptime and visitors
 npm run seed:owner -- --phone 0700 000 999 --name "Your Name"
 npm run start:dev             # http://127.0.0.1:3202/api
 
 cd ../web && npm install && npm run dev   # http://localhost:5180
 ```
-
-Without Beem keys, sign-in codes appear on the sign-in screen, outside production only.
 
 ## Tests
 

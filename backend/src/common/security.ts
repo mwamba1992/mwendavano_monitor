@@ -12,11 +12,9 @@ export const isProductionEnv = (env: Env = process.env) => env.NODE_ENV === 'pro
 export function productionConfigProblems(env: Env = process.env): string[] {
   if (!isProductionEnv(env)) return [];
   const problems: string[] = [];
-  for (const name of ['JWT_SECRET', 'SECRETS_KEY']) {
-    const v = env[name] ?? '';
-    if (v.length < MIN_SECRET_LENGTH) problems.push(`${name} must be at least ${MIN_SECRET_LENGTH} characters (openssl rand -hex 32)`);
-    else if (v.startsWith('change-me')) problems.push(`${name} is still the placeholder from the example file`);
-  }
+  const secret = env.JWT_SECRET ?? '';
+  if (secret.length < MIN_SECRET_LENGTH) problems.push(`JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters (openssl rand -hex 32)`);
+  else if (secret.startsWith('change-me')) problems.push('JWT_SECRET is still the placeholder from the example file');
   if (env.RO_DB_USERNAME !== RO_ROLE) problems.push(`RO_DB_USERNAME must be ${RO_ROLE}: the systems are read through the SELECT-only role, never their own users`);
   return problems;
 }
@@ -43,5 +41,3 @@ export function trustProxySetting(env: Env = process.env): string | number | boo
   if (raw === 'false' || raw === '0') return false;
   return /^\d+$/.test(raw) ? Number(raw) : raw;
 }
-
-export const secretsKey = (env: Env = process.env) => env.SECRETS_KEY || env.JWT_SECRET || '';

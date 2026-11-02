@@ -1,6 +1,5 @@
-import { canManageStaff, canRevealPhone, canSeeNumbers, canSeePeople, fullAccess, levelOf, noAccess, parseAccess, requiresTwoStep, staffEditProblem } from '../../access/access';
+import { canManageStaff, canRevealPhone, canSeeNumbers, canSeePeople, fullAccess, levelOf, noAccess, parseAccess, staffEditProblem } from '../../access/access';
 import { cardStatus } from '../../health/targets';
-import { base32Decode, base32Encode, checkTotp, openSecret, sealSecret, totpAt } from './totp';
 import { eatDate, eatDayStart, periodRange } from './time';
 import { productionConfigProblems } from '../security';
 import { absChange, pctChange, ptsChange, TtlCache } from '../../overview/overview.service';
@@ -17,10 +16,6 @@ describe('role checks', () => {
   });
   it('treats a corrupt value as none', () => expect(levelOf({ isOwner: false, access: { mauzo: 'root' } as any }, 'mauzo')).toBe('none'));
   it('the owner is Admin everywhere', () => expect(levelOf({ isOwner: true, access: noAccess() }, 'cargo')).toBe('admin'));
-  it('requires two-step for any Admin', () => {
-    expect(requiresTwoStep(actor({ cargo: 'admin' }))).toBe(true);
-    expect(requiresTwoStep(actor({ cargo: 'support' }))).toBe(false);
-  });
   it('one system Admin cannot manage staff', () => {
     expect(canManageStaff(actor({ cargo: 'admin' }))).toBe(false);
     expect(canManageStaff(actor({ server: 'admin' }))).toBe(true);
@@ -47,25 +42,6 @@ describe('status', () => {
   it('one failed web check is only Degraded', () => expect(cardStatus(card, m({ site: [false, true], api: [false, true], 'service:cargo-api': [true] }))).toBe('Degraded'));
   it('two failures on every web target is Down', () => expect(cardStatus(card, m({ site: [false, false], api: [false, false], 'service:cargo-api': [true] }))).toBe('Down'));
   it('no checks is No data, never Online', () => expect(cardStatus(card, m({}))).toBe('No data'));
-});
-
-describe('authenticator codes', () => {
-  // RFC 6238 test secret; the RFC's 8-digit 94287082 is 287082 in 6 digits.
-  const secret = base32Encode(Buffer.from('12345678901234567890'));
-  it('matches the RFC vector', () => expect(totpAt(secret, 1)).toBe('287082'));
-  it('round-trips base32', () => expect(base32Decode(secret).toString()).toBe('12345678901234567890'));
-  it('accepts one step of clock drift, not two', () => {
-    const t = new Date(59_000);
-    expect(checkTotp(secret, totpAt(secret, 1), t)).toBe(true);
-    expect(checkTotp(secret, totpAt(secret, 2), t)).toBe(true);
-    expect(checkTotp(secret, totpAt(secret, 3), t)).toBe(false);
-    expect(checkTotp(secret, 'abcdef', t)).toBe(false);
-  });
-  it('seals secrets so the wrong key fails', () => {
-    const s = sealSecret('abc', 'key-one');
-    expect(openSecret(s, 'key-one')).toBe('abc');
-    expect(() => openSecret(s, 'key-two')).toThrow();
-  });
 });
 
 describe('Dar es Salaam time', () => {
@@ -116,7 +92,7 @@ describe('display rules', () => {
 });
 
 describe('production config', () => {
-  const good = { NODE_ENV: 'production', JWT_SECRET: 'a'.repeat(32), SECRETS_KEY: 'b'.repeat(32), RO_DB_USERNAME: 'monitor_ro' };
+  const good = { NODE_ENV: 'production', JWT_SECRET: 'a'.repeat(32), RO_DB_USERNAME: 'monitor_ro' };
   it('accepts a safe setup', () => expect(productionConfigProblems(good)).toEqual([]));
   it('refuses a system DB user', () => expect(productionConfigProblems({ ...good, RO_DB_USERNAME: 'cargo' }).join()).toMatch(/monitor_ro/));
   it('refuses placeholder secrets', () => expect(productionConfigProblems({ ...good, JWT_SECRET: 'change-me'.padEnd(40, 'x') }).length).toBe(1));

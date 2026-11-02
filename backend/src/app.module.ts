@@ -39,7 +39,6 @@ class StaffPatchDto {
   @IsOptional() @IsString() @MaxLength(80) jobRole?: string;
   @IsOptional() @IsObject() access?: Record<string, string>;
   @IsOptional() @IsBoolean() active?: boolean;
-  @IsOptional() @IsBoolean() resetTwoStep?: boolean;
   @IsOptional() @IsBoolean() resetPassword?: boolean;
 }
 

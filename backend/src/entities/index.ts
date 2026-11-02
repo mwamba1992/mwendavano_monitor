@@ -18,9 +18,6 @@ export class Staff {
   @Column({ type: 'boolean', default: true }) active: boolean;
   @Column({ type: 'varchar', length: 100 }) passwordHash: string;
   @Column({ type: 'boolean', default: true }) mustChangePassword: boolean;
-  @Column({ type: 'varchar', length: 10, nullable: true }) twoFactorMethod: 'sms' | 'totp' | null;
-  /** Encrypted with SECRETS_KEY. Set while enrolling; counts only once twoFactorMethod is 'totp'. */
-  @Column({ type: 'text', nullable: true }) totpSecret: string | null;
   @Column({ type: 'jsonb' }) access: AccessMap;
   /** Raised to log someone out everywhere. */
   @Column({ type: 'int', default: 0 }) tokenVersion: number;
@@ -48,20 +45,6 @@ export class Lockout {
   @Column({ type: 'int', default: 0 }) failures: number;
   @Column({ type: 'timestamptz', nullable: true }) lastFailureAt: Date | null;
   @Column({ type: 'timestamptz', nullable: true }) lockedUntil: Date | null;
-}
-
-/** SMS sign-in codes. Only an HMAC of the code is stored. */
-@Entity('otp_codes')
-@Index(['phone', 'purpose', 'createdAt'])
-export class OtpCode {
-  @PrimaryGeneratedColumn() id: number;
-  @Column({ type: 'varchar', length: 20 }) phone: string;
-  @Column({ type: 'varchar', length: 40 }) purpose: string;
-  @Column({ type: 'varchar', length: 64 }) codeHash: string;
-  @Column({ type: 'timestamptz' }) expiresAt: Date;
-  @Column({ type: 'int', default: 0 }) attempts: number;
-  @Column({ type: 'timestamptz', nullable: true }) consumedAt: Date | null;
-  @Column({ type: 'timestamptz' }) createdAt: Date;
 }
 
 /** Append-only record of what staff did inside the Monitor. Never holds a full phone number or a secret. */
@@ -144,4 +127,4 @@ export class SystemNote {
   @Column({ type: 'timestamptz' }) updatedAt: Date;
 }
 
-export const ENTITIES = [Staff, Session, Lockout, OtpCode, ActivityLog, UptimeCheck, UptimeDaily, VisitorDaily, LogOffset, ManualNote, SystemNote];
+export const ENTITIES = [Staff, Session, Lockout, ActivityLog, UptimeCheck, UptimeDaily, VisitorDaily, LogOffset, ManualNote, SystemNote];
