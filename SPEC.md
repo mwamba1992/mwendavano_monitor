@@ -38,7 +38,7 @@ The design files are in `design/`:
 
 Each file is HTML. The `renderVals()` script at the bottom holds the sample data and the exact colours and styles. Use them as the visual reference; do not import that format. Live design canvas, owner only: https://claude.ai/artifact/FnrYMoQ1xSVwgZt7TLcSvM
 
-The owner asked for a stronger Overview than the design file (2 Nov 2026), so the live screen adds a dark summary hero, 14-day KPI trend lines, 30-day uptime strips and a line chart. Colours and fonts below still apply.
+The owner reviewed the built screens (2 Nov 2026) and chose a fully light look: no dark sidebar, hero or theme. The live Overview also adds 14-day KPI trend lines, 30-day uptime strips and a line chart. Where the design files differ, this wins.
 
 ### Design language
 - **Fonts:** Inter Tight for UI, IBM Plex Mono for numbers.
@@ -50,7 +50,7 @@ The owner asked for a stronger Overview than the design file (2 Nov 2026), so th
   | Cards | `#ffffff`, border `#dce5e1`, radius 14px |
   | Ink | `#10211f` |
   | Muted text | `#4d5f5c` |
-  | Sidebar | `#0f2624`, active item `#1d3d3a` |
+  | Sidebar | white, border `#dce5e1`, active item `#e6f2f0` |
   | Accent teal | `#0f6b6b` |
   | Amber | `#f0b429` |
   | OK | `#145c39` on `#dff3e8` |

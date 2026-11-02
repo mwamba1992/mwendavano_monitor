@@ -29,7 +29,7 @@ async function submit() {
 <template>
   <div class="login">
     <form class="dialog" @submit.prevent="submit">
-      <div class="brand"><div class="brand-mark">M</div><div class="brand-text">Mwendavano<small style="color: var(--muted)">Monitor</small></div></div>
+      <div class="brand"><div class="brand-mark">M</div><div class="brand-text">Mwendavano<small>Monitor</small></div></div>
       <h1 style="font-size: 24px">Sign in</h1>
       <div v-if="error" class="error" role="alert">{{ error }}</div>
       <div class="form">

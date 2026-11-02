@@ -166,7 +166,7 @@ onUnmounted(() => clearInterval(timer))
 
   <div class="row rise">
     <section v-if="overview?.signups.length" class="card wide" aria-labelledby="new-h">
-      <div class="section-head"><h2 id="new-h">New sign-ups</h2><router-link to="/users" style="font-size: 14px; font-weight: 600">All users</router-link></div>
+      <div class="section-head"><h2 id="new-h">New sign-ups</h2><router-link to="/users" class="linkbtn">All users</router-link></div>
       <div class="scroll">
         <table style="min-width: 560px">
           <thead><tr><th>Name</th><th>System</th><th>Type</th><th>Location</th><th class="right">When</th></tr></thead>
