@@ -21,11 +21,17 @@ The Monitor runs on the Contabo VPS next to the systems it watches: systemd `mon
 
 ## First deploy
 
+The code reaches the server through git, like Wafanyakazi. The server needs read access to the GitHub repo (a deploy key, or the access it already uses for the other apps).
+
+On the server, as root:
+
 ```bash
+git clone git@github.com:mwamba1992/mwendavano-monitor.git /var/www/mwendavano-monitor
+cd /var/www/mwendavano-monitor
 bash deploy/deploy.sh
 ```
 
-This builds both apps, uploads them, and on the first run creates:
+This builds both apps on the server, and on the first run creates:
 
 - the database and its `monitor` user,
 - the SELECT-only role `monitor_ro` with grants on `inventorydb`, `wafanyakazi`, `mwendavano_cargo`,
@@ -66,8 +72,10 @@ Put it in the HTTPS `server` block, which certbot manages, then `nginx -t && sys
 
 ## Updates
 
+On the server, as root:
+
 ```bash
-bash deploy/deploy.sh
+cd /var/www/mwendavano-monitor && git pull --ff-only && bash deploy/deploy.sh
 ```
 
 `.env` and the database are left alone. Migrations run at boot.

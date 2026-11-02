@@ -1,43 +1,24 @@
 #!/usr/bin/env bash
-# Deploys Mwendavano Monitor to the Mwendavano VPS (no Docker): API on :3202 + website, at https://monitor.mwendavano.com
+# Builds and starts Mwendavano Monitor on the server, from the git clone in /var/www/mwendavano-monitor.
+# API on :3202 under systemd, website through nginx, at https://monitor.mwendavano.com
 #
-#   bash deploy/deploy.sh                 first install or update (safe to run again)
+#   cd /var/www/mwendavano-monitor && git pull --ff-only && bash deploy/deploy.sh
 #
-# The owner's OK comes first: see DEPLOY.md. Later runs only upload new code and restart;
+# Run it on the server, as root. First install or update, safe to run again.
+# The owner's OK comes first: see DEPLOY.md. Later runs only build and restart;
 # .env and the database are never overwritten. This never changes another app's nginx site.
 set -euo pipefail
 
-SERVER="${SERVER:-root@84.247.178.93}"
 DOMAIN="${DOMAIN:-monitor.mwendavano.com}"
 APP=/var/www/mwendavano-monitor
 WEB=/var/www/monitor-web
 NODE_BIN=/root/.nvm/versions/node/v20.19.5/bin
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 
-# One SSH connection for every step: the server rate-limits SSH.
-SSH_CTL="/tmp/mon-%C"
-SSH_OPTS=(-o ControlMaster=auto -o ControlPath="$SSH_CTL" -o ControlPersist=120 -o ConnectTimeout=15)
-ssh() { command ssh "${SSH_OPTS[@]}" "$@"; }
-export RSYNC_RSH="ssh ${SSH_OPTS[*]}"
-trap 'command ssh "${SSH_OPTS[@]}" -O exit "$SERVER" 2>/dev/null || true' EXIT
-
-echo "→ Building API and website"
-(cd "$HERE/backend" && npm run build >/dev/null)
-(cd "$HERE/web" && npm run build >/dev/null)
-
-echo "→ Uploading to $SERVER"
-ssh "$SERVER" "mkdir -p $APP/backend $WEB"
-rsync -az --delete "$HERE/backend/dist/" "$SERVER:$APP/backend/dist/"
-rsync -az "$HERE/backend/package.json" "$HERE/backend/package-lock.json" "$SERVER:$APP/backend/"
-rsync -az "$HERE/deploy/" "$SERVER:$APP/deploy/"
-rsync -az --delete "$HERE/web/dist/" "$SERVER:$WEB/"
-
-echo "→ Installing on the server"
-ssh "$SERVER" APP="$APP" DOMAIN="$DOMAIN" NODE_BIN="$NODE_BIN" bash -s <<'REMOTE'
-set -euo pipefail
+[ "$(id -u)" = 0 ] && [ "$HERE" = "$APP" ] || { echo "!! Run this on the server, as root, from $APP"; exit 1; }
 export PATH="$NODE_BIN:$PATH"
 cd "$APP/backend"
-ss -ltn | grep -q ':3202 ' && ! systemctl is-active -q monitor-api && { echo "!! Port 3202 is in use by something else"; exit 1; }
+if ss -ltn | grep -q ':3202 ' && ! systemctl is-active -q monitor-api; then echo "!! Port 3202 is in use by something else"; exit 1; fi
 
 # First run: own database, read-only role, .env with random secrets.
 if [ ! -f .env ]; then
@@ -74,7 +55,15 @@ ENV
   echo "  created database, read-only role and .env"
 fi
 
-npm ci --omit=dev --no-audit --no-fund >/dev/null
+echo "→ Building API and website"
+npm ci --no-audit --no-fund >/dev/null
+npm run build >/dev/null
+npm prune --omit=dev --no-audit --no-fund >/dev/null
+(cd "$APP/web" && npm ci --no-audit --no-fund >/dev/null && npm run build >/dev/null)
+rm -rf "$WEB.new"
+cp -r "$APP/web/dist" "$WEB.new"
+rm -rf "$WEB"
+mv "$WEB.new" "$WEB"
 
 # Service (migrations run at boot because NODE_ENV=production).
 cp "$APP/deploy/systemd/monitor-api.service" /etc/systemd/system/monitor-api.service
@@ -96,6 +85,5 @@ if ! grep -q ssl_certificate "/etc/nginx/sites-available/$DOMAIN"; then
   certbot --nginx -d "$DOMAIN" --redirect --non-interactive --agree-tos --register-unsafely-without-email \
     || echo "!! HTTPS not set up yet: add the DNS A record for $DOMAIN, then run this script again"
 fi
-REMOTE
 
 echo "✓ Live: https://$DOMAIN"
