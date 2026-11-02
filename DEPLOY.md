@@ -8,25 +8,17 @@ The Monitor runs on the Contabo VPS next to the systems it watches: systemd `mon
 
 1. Owner confirms the address. `monitor.mwendavano.com` is assumed.
 2. Add a DNS A record for that name, pointing at 84.247.178.93.
-3. Check which Soko service is the live one. The 28 October backup has both `dukani-soko` and `dukani-store`, on the same port:
-   ```bash
-   systemctl is-active dukani-soko dukani-store
-   ```
-   The Monitor watches `dukani-soko`, as the spec says. If that one is not active, change `backend/src/health/targets.ts` first, or Soko will show as Down.
-4. Check the server clock zone, which decides what "today" means for the Dukani tables (their timestamps have no zone):
-   ```bash
-   timedatectl | grep "Time zone"
-   ```
-   The Monitor assumes UTC. If it is anything else, put `INVENTORY_DB_TIMEZONE=<zone>` in the Monitor's `.env`.
+3. The live Soko service is `dukani-store`, and that is what the Monitor watches. `dukani-soko` is an old duplicate on the same port, which restarts and fails.
+4. The Dukani tables have no time zone in their timestamps. `deploy.sh` copies the server's zone into `INVENTORY_DB_TIMEZONE` on the first run. If the server's zone ever changes, change that line in `.env` too.
 
 ## First deploy
 
-The code reaches the server through git, like Wafanyakazi. The server needs read access to the GitHub repo (a deploy key, or the access it already uses for the other apps).
+The code reaches the server through git, like Wafanyakazi. The server needs read access to the GitHub repo. The server has no GitHub SSH key today, so it clones over HTTPS, which needs the repo to be public; a private repo needs a deploy key and the SSH address.
 
 On the server, as root:
 
 ```bash
-git clone git@github.com:mwamba1992/mwendavano_monitor.git /var/www/mwendavano-monitor
+git clone https://github.com/mwamba1992/mwendavano_monitor.git /var/www/mwendavano-monitor
 cd /var/www/mwendavano-monitor
 bash deploy/deploy.sh
 ```

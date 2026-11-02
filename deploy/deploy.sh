@@ -47,6 +47,7 @@ RO_DB_PASSWORD=$RO_PASS
 RO_DB_INVENTORY=inventorydb
 RO_DB_WAFANYAKAZI=wafanyakazi
 RO_DB_CARGO=mwendavano_cargo
+INVENTORY_DB_TIMEZONE=$(timedatectl show -p Timezone --value)
 # The Soko App Review phone: set it, then systemctl restart monitor-api
 REVIEW_PHONE=
 ENV

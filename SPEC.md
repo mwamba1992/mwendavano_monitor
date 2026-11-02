@@ -21,7 +21,7 @@ Owner: Joel M. Gaitan (CEO). Address: **monitor.mwendavano.com** (assumed; confi
 | System | What it is | Code (local) | Database | Service on the server |
 |---|---|---|---|---|
 | Dukani Mauzo | Shops' sales/stock app + portal (dukanimauzo.com) | `~/personal/inventory-management-backend` | `inventorydb`, schema `core` | `dukani-api` |
-| Dukani Soko | Marketplace for buyers (dukanisoko.com, iOS/Android app) | API: same backend · web: `~/personal/ecommerce-store-front` (Nuxt) | `inventorydb` (`core`) | `dukani-api`, `dukani-soko` (web) |
+| Dukani Soko | Marketplace for buyers (dukanisoko.com, iOS/Android app) | API: same backend · web: `~/personal/ecommerce-store-front` (Nuxt) | `inventorydb` (`core`) | `dukani-api`, `dukani-store` (web) |
 | Global Authentics TZ | Our own retail shop (business_id = 1 in inventorydb) | same backend | `inventorydb` | `dukani-api` |
 | Dukani Wafanyakazi | Staff attendance and pay | `~/personal/wafanyakazi` (backend + web) | `wafanyakazi` | `wafanyakazi-api` (port 3101) |
 | Mwendavano Cargo | Cargo shipments Dubai → Dar | `~/personal/mwendavano-cargo` | `mwendavano_cargo` | `cargo-api` |
@@ -192,7 +192,7 @@ mwendavano-monitor/
   - https://cargo.mwendavano.com
   - store.mwendavano.com
   - each API's health route (use one if it exists; otherwise a cheap public GET)
-- **`systemctl is-active`** for `dukani-api`, `dukani-soko`, `wafanyakazi-api`, `cargo-api`, `nginx`, `postgresql`. The Monitor runs on the same box, so it can run this through `child_process` with a fixed allow-list of names. Never pass user input to it.
+- **`systemctl is-active`** for `dukani-api`, `dukani-store`, `wafanyakazi-api`, `cargo-api`, `nginx`, `postgresql`. The Monitor runs on the same box, so it can run this through `child_process` with a fixed allow-list of names. Never pass user input to it.
 - **Server:** disk from `df` / `statfs`, memory and load from `os`, and DB connections from `pg_stat_activity`.
 - The Monitor does not call Beem (owner's decision, 2 Nov 2026): no SMS balance and no SMS codes.
 - **Last deploy:** `git -C <app dir> log -1 --format=%cI` for each app directory.

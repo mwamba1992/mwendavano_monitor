@@ -334,7 +334,7 @@ describe('Monitor end to end', () => {
         return 'active';
       };
       await checks.tick();
-      expect(seen.sort()).toEqual(['cargo-api', 'dukani-api', 'dukani-soko', 'nginx', 'postgresql', 'wafanyakazi-api']);
+      expect(seen.sort()).toEqual(['cargo-api', 'dukani-api', 'dukani-store', 'nginx', 'postgresql', 'wafanyakazi-api']);
     });
     it('rolls raw checks older than 30 days into daily totals', async () => {
       const checks = app.get(ChecksService);

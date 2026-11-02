@@ -1,7 +1,7 @@
 import { SystemKey } from '../access/access';
 
 /** systemctl only ever sees these literals. Nothing from a request reaches it. */
-export const SERVICES = ['dukani-api', 'dukani-soko', 'wafanyakazi-api', 'cargo-api', 'nginx', 'postgresql'] as const;
+export const SERVICES = ['dukani-api', 'dukani-store', 'wafanyakazi-api', 'cargo-api', 'nginx', 'postgresql'] as const;
 export type ServiceName = (typeof SERVICES)[number];
 
 export const HTTP_TARGETS: { id: string; url: string }[] = [
@@ -33,7 +33,7 @@ export interface Card {
 
 export const CARDS: Card[] = [
   { id: 'mauzo', name: 'Dukani Mauzo', domain: 'dukanimauzo.com · shops and sales', initials: 'DM', system: 'mauzo', http: ['site:mauzo', 'api:dukani'], services: ['dukani-api'], appDir: '/var/www/inventory-management-backend', buildDir: 'dist' },
-  { id: 'soko', name: 'Dukani Soko', domain: 'dukanisoko.com · marketplace', initials: 'DS', system: 'soko', http: ['site:soko', 'api:dukani'], services: ['dukani-api', 'dukani-soko'], appDir: '/var/www/ecommerce-store-front', buildDir: '.output' },
+  { id: 'soko', name: 'Dukani Soko', domain: 'dukanisoko.com · marketplace', initials: 'DS', system: 'soko', http: ['site:soko', 'api:dukani'], services: ['dukani-api', 'dukani-store'], appDir: '/var/www/ecommerce-store-front', buildDir: '.output' },
   { id: 'wafanyakazi', name: 'Dukani Wafanyakazi', domain: 'Staff attendance and pay', initials: 'DW', system: 'wafanyakazi', http: ['site:wafanyakazi', 'api:wafanyakazi'], services: ['wafanyakazi-api'], appDir: '/var/www/dukani-wafanyakazi', buildDir: 'backend/dist' },
   { id: 'cargo', name: 'Mwendavano Cargo', domain: 'Shipments Dubai to Dar', initials: 'MC', system: 'cargo', http: ['site:cargo', 'api:cargo'], services: ['cargo-api'], appDir: '/var/www/mwendavano-cargo', buildDir: 'backend/dist' },
   { id: 'global', name: 'Global Authentics TZ', domain: 'store.mwendavano.com · our own shop', initials: 'GA', system: 'mauzo', http: ['site:store', 'api:dukani'], services: ['dukani-api'], appDir: '/var/www/inventory-management-backend', buildDir: 'dist' },
