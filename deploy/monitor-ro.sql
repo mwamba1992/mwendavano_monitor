@@ -1,6 +1,6 @@
 -- The SELECT-only role the Monitor reads every system with. Safe to run again.
 -- Run as postgres, once per monitored database, schema `core` for inventorydb and `public` for the rest:
---   sudo -u postgres psql -d postgres -v pw="'<password>'" -f deploy/monitor-ro-role.sql
+--   { printf '\\set pw %s\n' "$RO_PASS"; cat deploy/monitor-ro-role.sql; } | sudo -u postgres psql -d postgres
 --   sudo -u postgres psql -d inventorydb      -v schema=core   -f deploy/monitor-ro.sql
 --   sudo -u postgres psql -d wafanyakazi      -v schema=public -f deploy/monitor-ro.sql
 --   sudo -u postgres psql -d mwendavano_cargo -v schema=public -f deploy/monitor-ro.sql

@@ -44,10 +44,11 @@ if [ ! -f .env ]; then
   DB_PASS=$(openssl rand -hex 24)
   RO_PASS=$(openssl rand -hex 24)
   sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='monitor'" | grep -q 1 || sudo -u postgres psql -c "CREATE USER monitor;" >/dev/null
-  printf "ALTER USER monitor WITH PASSWORD '%s';\n" "$DB_PASS" | sudo -u postgres psql -q
+  # Passwords go in through stdin: a sudo command line is written to /var/log/auth.log.
+  printf "SET log_statement = 'none';\nALTER USER monitor WITH PASSWORD '%s';\n" "$DB_PASS" | sudo -u postgres psql -q
   sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mwendavano_monitor'" | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE mwendavano_monitor OWNER monitor;" >/dev/null
   cp "$APP/deploy/monitor-ro.sql" "$APP/deploy/monitor-ro-role.sql" /tmp/
-  sudo -u postgres psql -q -d postgres -v pw="'$RO_PASS'" -f /tmp/monitor-ro-role.sql
+  { printf '\\set pw %s\n' "$RO_PASS"; cat /tmp/monitor-ro-role.sql; } | sudo -u postgres psql -q -d postgres
   sudo -u postgres psql -q -d inventorydb -v schema=core -f /tmp/monitor-ro.sql
   sudo -u postgres psql -q -d wafanyakazi -v schema=public -f /tmp/monitor-ro.sql
   sudo -u postgres psql -q -d mwendavano_cargo -v schema=public -f /tmp/monitor-ro.sql
@@ -85,7 +86,7 @@ curl -sf http://127.0.0.1:3202/api/health >/dev/null || { journalctl -u monitor-
 echo "  API healthy"
 
 # nginx + HTTPS, first time only (certbot adds the 443 block to this file).
-cp "$APP/deploy/nginx/monitor-proxy.conf" /etc/nginx/monitor-proxy.conf
+cp "$APP/deploy/nginx/monitor-proxy.conf" "$APP/deploy/nginx/monitor-headers.conf" /etc/nginx/
 if [ ! -f "/etc/nginx/sites-available/$DOMAIN" ]; then
   cp "$APP/deploy/nginx/$DOMAIN.conf" "/etc/nginx/sites-available/$DOMAIN"
   ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/$DOMAIN"
