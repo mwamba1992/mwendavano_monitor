@@ -1,0 +1,23 @@
+# Logs: journalctl -u monitor-api -f
+[Unit]
+Description=Mwendavano Monitor API (NestJS)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Node 20.19.5 is installed with nvm under /root, so the service runs as root, like the other apps.
+User=root
+WorkingDirectory=/var/www/mwendavano-monitor/backend
+EnvironmentFile=/var/www/mwendavano-monitor/backend/.env
+# Port 3201 is taken by cargo-api and 3101 by wafanyakazi-api.
+Environment=NODE_ENV=production
+Environment=PORT=3202
+ExecStart=/root/.nvm/versions/node/v20.19.5/bin/node dist/main
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
