@@ -70,7 +70,7 @@ describe('Monitor end to end', () => {
     tokens.view = (await login('0711100002')).accessToken;
     tokens.support = (await login('0711100003')).accessToken;
     tokens.owner = (await login('0711100001')).accessToken;
-  });
+  }, 120_000); // Builds three databases and, on a cold cache, compiles the whole app.
 
   afterAll(async () => {
     await app.close();
