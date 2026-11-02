@@ -26,7 +26,7 @@ The code reaches the server through git, like Wafanyakazi. The server needs read
 On the server, as root:
 
 ```bash
-git clone git@github.com:mwamba1992/mwendavano-monitor.git /var/www/mwendavano-monitor
+git clone git@github.com:mwamba1992/mwendavano_monitor.git /var/www/mwendavano-monitor
 cd /var/www/mwendavano-monitor
 bash deploy/deploy.sh
 ```
