@@ -5,7 +5,7 @@ import { ApiError, del, get, patch, post, session, type SystemKey } from '@/api'
 import Sparkline from '@/components/Sparkline.vue'
 import TrendChart from '@/components/TrendChart.vue'
 import UptimeStrip from '@/components/UptimeStrip.vue'
-import { clock, greeting, longDate, shortDate, siteColour, SYSTEM_LABEL, timeAgo } from '@/format'
+import { clock, greeting, longDate, number, shortDate, siteColour, SYSTEM_LABEL, timeAgo } from '@/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -20,6 +20,10 @@ const error = ref('')
 const search = ref('')
 
 const hasVisitors = computed(() => (visitors.value?.sites.length ?? 0) > 0)
+const places = computed(() => [
+  { title: 'Countries', rows: visitors.value?.locations.countries ?? [] },
+  { title: 'Cities', rows: visitors.value?.locations.cities ?? [] },
+])
 
 const pillClass = (c: any) => (c.status === 'Down' ? 'bad' : c.status === 'No data' ? 'none' : c.status === 'Degraded' || c.note ? 'warn' : '')
 /** A real outage always beats the manual note. */
@@ -154,13 +158,30 @@ onUnmounted(() => clearInterval(timer))
       <p v-else class="empty">No visitor numbers yet. They start once the site logs are being read.</p>
     </section>
 
-    <section class="card narrow" aria-labelledby="sources-h">
-      <h2 id="sources-h">Where visitors come from</h2>
+    <section class="card narrow spread" aria-labelledby="sources-h">
+      <h2 id="sources-h">How visitors find us</h2>
       <div v-for="s in visitors.sources" :key="s.name" class="source">
         <div><span>{{ s.name }}</span><b>{{ s.pct }}%</b></div>
         <div class="track"><div class="fill" :style="{ width: `${s.pct}%` }" /></div>
       </div>
       <p v-if="!visitors.sources.length" class="empty">Nothing to show yet.</p>
+    </section>
+  </div>
+
+  <div v-if="hasVisitors" class="row rise">
+    <section class="card wide" aria-labelledby="places-h">
+      <div><h2 id="places-h">Where visitors are</h2><span class="hint">Visits in the last 14 days. Cities are estimates: a phone often shows the city of its network.</span></div>
+      <div v-if="visitors.locations.countries.length" class="places">
+        <div v-for="g in places" :key="g.title">
+          <h3>{{ g.title }}</h3>
+          <div v-for="p in g.rows" :key="p.name" class="source">
+            <div><span>{{ p.name }}</span><b>{{ number(p.n) }} · {{ p.pct }}%</b></div>
+            <div class="track"><div class="fill" :style="{ width: `${p.pct}%` }" /></div>
+          </div>
+        </div>
+      </div>
+      <p v-else class="empty">Nothing to show yet.</p>
+      <p class="geo-credit"><a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a></p>
     </section>
   </div>
 

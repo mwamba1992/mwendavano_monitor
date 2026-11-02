@@ -10,6 +10,7 @@ import { Actor, canSeeNumbers, SystemKey } from '../access/access';
 import { eatDate, lastDays } from '../common/logic/time';
 import { isProductionEnv } from '../common/security';
 import { LogOffset, VisitorDaily } from '../entities';
+import { GeoLookup, summarizeLocations } from './geo';
 import { addVisitor, classifyReferrer, countSketch, isPageView, mergeSketch, newSketch, parseLine, SOURCES } from './log-parser';
 
 /** One access_log per public site: see deploy/add-visitor-logs.sh. Those names are this table. */
@@ -26,6 +27,7 @@ interface Tally {
   sketch: Buffer;
   pageViews: number;
   sources: Record<string, number>;
+  locations: Record<string, number>;
 }
 type Tallies = Map<string, Tally>;
 
@@ -59,6 +61,7 @@ const stat = (p: string) => fs.stat(p).catch(() => null);
 export class VisitorsService {
   private readonly log = new Logger(VisitorsService.name);
   private running = false;
+  private readonly geo = new GeoLookup();
 
   constructor(private readonly ds: DataSource) {}
 
@@ -78,6 +81,7 @@ export class VisitorsService {
     if (this.running) return;
     this.running = true;
     try {
+      await this.geo.refresh();
       for (const { site } of SITES) await this.processSite(site);
     } finally {
       this.running = false;
@@ -89,11 +93,15 @@ export class VisitorsService {
     if (!l || !isPageView(l)) return;
     const date = eatDate(l.time);
     let day = t.get(date);
-    if (!day) t.set(date, (day = { sketch: newSketch(), pageViews: 0, sources: {} }));
+    if (!day) t.set(date, (day = { sketch: newSketch(), pageViews: 0, sources: {}, locations: {} }));
     day.pageViews++;
     addVisitor(day.sketch, l.ip, l.userAgent);
     const source = classifyReferrer(l.referrer, site);
-    if (source) day.sources[source] = (day.sources[source] ?? 0) + 1;
+    if (!source) return;
+    day.sources[source] = (day.sources[source] ?? 0) + 1;
+    // Arrivals, like sources: clicking around inside a site does not make one person count as many.
+    const place = this.geo.place(l.ip);
+    if (place) day.locations[place] = (day.locations[place] ?? 0) + 1;
   }
 
   /** logrotate: x.log → x.log.1 → x.log.2.gz. The whole history is read once, on the first run. */
@@ -142,7 +150,9 @@ export class VisitorsService {
         mergeSketch(sketch, t.sketch);
         const sources = { ...(row?.sources ?? {}) };
         for (const [k, v] of Object.entries(t.sources)) sources[k] = (sources[k] ?? 0) + v;
-        await m.save(VisitorDaily, { date, site, sketch, sources, visitors: countSketch(sketch), pageViews: (row?.pageViews ?? 0) + t.pageViews });
+        const locations = { ...(row?.locations ?? {}) };
+        for (const [k, v] of Object.entries(t.locations)) locations[k] = (locations[k] ?? 0) + v;
+        await m.save(VisitorDaily, { date, site, sketch, sources, locations, visitors: countSketch(sketch), pageViews: (row?.pageViews ?? 0) + t.pageViews });
       }
       await m.save(LogOffset, { path, inode, offset: String(offset), updatedAt: new Date() });
     });
@@ -162,12 +172,15 @@ export class VisitorsService {
   async report(a: Actor, nDays: number) {
     const days = lastDays(nDays);
     const sites = this.sitesFor(a);
-    const rows = sites.length ? await this.ds.getRepository(VisitorDaily).find({ where: { date: In(days), site: In(sites) }, select: { date: true, site: true, visitors: true, sources: true } }) : [];
+    const rows = sites.length ? await this.ds.getRepository(VisitorDaily).find({ where: { date: In(days), site: In(sites) }, select: { date: true, site: true, visitors: true, sources: true, locations: true } }) : [];
     const seen = sites.filter((s) => rows.some((r) => r.site === s));
     const sum: Record<string, number> = {};
     for (const r of rows) for (const [k, v] of Object.entries(r.sources)) sum[k] = (sum[k] ?? 0) + v;
     const all = Object.values(sum).reduce((x, y) => x + y, 0);
+    const places: Record<string, number> = {};
+    for (const r of rows) for (const [k, v] of Object.entries(r.locations)) places[k] = (places[k] ?? 0) + v;
     return {
+      locations: summarizeLocations(places),
       sites: seen,
       days: days.map((date) => ({ date, counts: Object.fromEntries(seen.map((s) => [s, rows.find((r) => r.date === date && r.site === s)?.visitors ?? 0])) })),
       sources: all ? SOURCES.map((name) => ({ name, pct: Math.round(((sum[name] ?? 0) / all) * 100) })).filter((s) => s.pct > 0).sort((x, y) => y.pct - x.pct) : [],

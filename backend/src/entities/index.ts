@@ -92,6 +92,8 @@ export class VisitorDaily {
   @Column({ type: 'int', default: 0 }) visitors: number;
   @Column({ type: 'int', default: 0 }) pageViews: number;
   @Column({ type: 'jsonb', default: {} }) sources: Record<string, number>;
+  /** Arrivals per place, keyed "Country|City". Worked out from the IP, which is then dropped. */
+  @Column({ type: 'jsonb', default: {} }) locations: Record<string, number>;
   @Column({ type: 'bytea' }) sketch: Buffer;
 }
 

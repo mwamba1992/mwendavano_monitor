@@ -95,7 +95,8 @@ The owner reviewed the built screens (2 Nov 2026) and chose a fully light look: 
     | Global Authentics | products, sales today, WhatsApp orders today |
 
 - **Website visitors** chart: daily unique visitors for 14 days, one line per site.
-- **Where visitors come from**: referrers grouped as Instagram, Google, WhatsApp, Facebook, Direct, Other.
+- **How visitors find us**: referrers grouped as Instagram, Google, WhatsApp, Facebook, Direct, Other.
+- **Where visitors are**: top countries and cities for 14 days, counted per arrival. Cities are estimates.
 - **New sign-ups**: latest 6 from all systems (name, system tag, type, location, time ago).
 - **Needs attention** alerts:
   - service down
@@ -204,7 +205,8 @@ mwendavano-monitor/
   - static asset requests
   - API calls
 - Classify the referrer into the source groups listed under Overview.
-- Run every 10 minutes, keeping a file offset so it resumes where it stopped. Store **only aggregates** (`visitor_daily`: date, site, visitors, page views, source counts). Do not store IPs.
+- Run every 10 minutes, keeping a file offset so it resumes where it stopped. Store **only aggregates** (`visitor_daily`: date, site, visitors, page views, source counts, place counts). Do not store IPs.
+- Places come from the DB-IP City Lite file on this server (`deploy/update-geoip.sh`, monthly), so no IP leaves the box. Only "Country|City" counts are kept. DB-IP Lite is CC BY 4.0, so Overview keeps its "IP Geolocation by DB-IP" link.
 - Check the actual log names and formats in the nginx site configs on the server first. If the sites share one log, add a site-specific `access_log` (that is a deploy step, so ask first).
 
 ### Auth and roles

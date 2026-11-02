@@ -56,6 +56,11 @@ ENV
   echo "  created database, read-only role and .env"
 fi
 
+# The database behind "Where visitors are", refreshed monthly. A failed download must not stop a deploy.
+echo "→ Location database"
+bash "$APP/deploy/update-geoip.sh" || echo "  skipped: visits are counted without a place until it succeeds"
+echo "20 4 3 * * root bash $APP/deploy/update-geoip.sh >/dev/null 2>&1" > /etc/cron.d/monitor-geoip
+
 echo "→ Building API and website"
 npm ci --no-audit --no-fund >/dev/null
 npm run build >/dev/null

@@ -357,6 +357,31 @@ describe('Monitor end to end', () => {
     const line = (ip: string, path = '/', ref = '-', ua = UA) => `${ip} - - [${time()}] "GET ${path} HTTP/1.1" 200 100 "${ref}" "${ua}"\n`;
     const file = join(logDir, 'dukanisoko.com.access.log');
 
+    it('records where visitors arrive from as place names only, per arrival', async () => {
+      const v = app.get(VisitorsService);
+      const places: Record<string, string> = { '41.59.9.1': 'Tanzania|Dar es Salaam', '41.59.9.2': 'Tanzania|Mwanza', '105.9.9.9': 'Kenya|Nairobi' };
+      const place = jest.spyOn((v as any).geo, 'place').mockImplementation((ip: any) => places[ip] ?? null);
+      const site = 'cargo.mwendavano.com';
+      writeFileSync(
+        join(logDir, `${site}.access.log`),
+        line('41.59.9.1') + line('41.59.9.1', '/next', `https://${site}/`) + line('41.59.9.2') + line('105.9.9.9', '/', 'https://l.instagram.com/') + line('66.66.66.66'),
+      );
+      await v.run();
+      place.mockRestore();
+
+      const row = await ds.getRepository(VisitorDaily).findOneByOrFail({ site });
+      // The click inside the site is not a second arrival, and an address with no place adds nothing.
+      expect(row.locations).toEqual({ 'Tanzania|Dar es Salaam': 1, 'Tanzania|Mwanza': 1, 'Kenya|Nairobi': 1 });
+      expect(JSON.stringify(row.locations)).not.toMatch(/\d+\.\d+\.\d+/);
+
+      const r = await request(http).get('/api/visitors?days=14').set(bearer('owner')).expect(200);
+      expect(r.body.locations.countries).toEqual([
+        { name: 'Tanzania', n: 2, pct: 67 },
+        { name: 'Kenya', n: 1, pct: 33 },
+      ]);
+      await ds.getRepository(VisitorDaily).delete({ site });
+    });
+
     it('counts people, drops bots and assets, resumes, survives rotation, keeps no IP', async () => {
       const v = app.get(VisitorsService);
       writeFileSync(file, line('41.0.0.1', '/', 'https://l.instagram.com/') + line('41.0.0.1', '/shops') + line('41.0.0.2', '/', 'https://www.google.com/') + line('66.0.0.1', '/', '-', 'Googlebot/2.1') + line('41.0.0.3', '/_nuxt/app.js') + line('41.0.0.3', '/api/market/shops'));
