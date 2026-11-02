@@ -12,6 +12,7 @@ import { configureApp } from '../common/http-setup';
 import { normalizePhone } from '../common/logic/phone';
 import { ActivityLog, LogOffset, Staff, UptimeCheck, VisitorDaily } from '../entities';
 import { ChecksService } from '../health/checks.service';
+import { OverviewService } from '../overview/overview.service';
 import { SourcesService } from '../sources/sources.service';
 import { VisitorsService } from '../visitors/visitors.service';
 import { asAdmin, createSources, fillSources, RO_PASSWORD } from '../../test/sources-setup';
@@ -257,7 +258,8 @@ describe('Monitor end to end', () => {
     it('computes every KPI', async () => {
       const r = await request(http).get('/api/overview?period=today').set(bearer('owner')).expect(200);
       expect(r.body.kpis.map((k: any) => k.key)).toEqual(['users', 'visitors', 'shops', 'orders', 'staff']);
-      expect(r.body.kpis.every((k: any) => k.value !== '—')).toBe(true);
+      expect(r.body.kpis.every((k: any) => k.value !== '—' && k.trend.length === 14)).toBe(true);
+      expect(r.body.kpis.find((k: any) => k.key === 'staff').trend[13]).toBe(2);
       expect(r.body.signups).toHaveLength(6);
       expect(r.body.signups[0].name).toBe('Neema Jipya');
       const w = await request(http).get('/api/overview?period=7d').set(bearer('owner')).expect(200);
@@ -298,16 +300,23 @@ describe('Monitor end to end', () => {
   describe('health checks', () => {
     it('shows a stopped service as Down with an alert after one check, and recovers', async () => {
       const checks = app.get(ChecksService);
+      const overview = app.get(OverviewService);
+      overview.clearCache();
       checks.probeHttp = async () => ({ status: 200, ms: 120 });
       let cargo = 'active';
       checks.probeService = async (n) => (n === 'cargo-api' ? cargo : 'active');
       await checks.tick();
+      overview.clearCache();
       const card = async () => (await request(http).get('/api/systems').set(bearer('owner')).expect(200)).body.cards.find((c: any) => c.id === 'cargo');
       expect((await card()).status).toBe('Online');
       expect((await card()).uptime).toBe(100);
 
+      expect((await card()).days).toHaveLength(30);
+      expect((await card()).days[29].pct).toBe(100);
+
       cargo = 'inactive';
       await checks.tick();
+      overview.clearCache();
       expect((await card()).status).toBe('Down');
       const alerts = await request(http).get('/api/alerts').set(bearer('owner')).expect(200);
       expect(alerts.body[0]).toMatchObject({ id: 'down:cargo', level: 'bad', detail: 'Service stopped: cargo-api' });

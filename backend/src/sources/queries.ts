@@ -105,6 +105,21 @@ export const attendanceBetween = (a: Date, b: Date, c: Date, d: Date, fromDay: s
   };
 };
 
+/** How many events fell in each window, for the trend lines. */
+export function eventCounts(kind: 'orders' | 'shops' | 'checkins', windows: [Date, Date][]): Q {
+  const source = {
+    orders: `SELECT ${invTs('created_at')} AS t FROM core.whatsapp_orders WHERE "orderSource" = 'ecommerce' AND business_id NOT IN ${testShopIds}`,
+    shops: `SELECT ${invTs('registered_at')} AS t FROM core.business WHERE ${realShops}`,
+    checkins: `SELECT "clockInAt" AS t FROM attendance WHERE "businessId" NOT IN ${reviewWorkplaces}`,
+  }[kind];
+  const params: unknown[] = [];
+  const cols = windows.map(([a, b], i) => {
+    params.push(a, b);
+    return `count(*) FILTER (WHERE t >= $${params.length - 1} AND t < $${params.length})::int AS w${i}`;
+  });
+  return { sql: `SELECT ${cols.join(', ')} FROM (${source}) x`, params };
+}
+
 export const trialsEnding = (now: Date): Q => ({
   sql: `SELECT count(*)::int AS n FROM core.subscription s JOIN core.business b ON b.id = s.business_id
         WHERE s.status = 'trial' AND s.paid_until IS NULL AND b.status = 'active' AND b.id NOT IN ${testShopIds}

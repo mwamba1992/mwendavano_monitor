@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Actor, canSeeNumbers, canSeePeople, PEOPLE_SYSTEMS, PeopleSystem } from '../access/access';
-import { eatDate, eatDayStart, Period, periodRange, PeriodRange } from '../common/logic/time';
+import { dayWindows, eatDate, eatDayStart, lastDays, Period, periodRange, PeriodRange } from '../common/logic/time';
 import { SystemNote } from '../entities';
 import { ChecksService } from '../health/checks.service';
 import { CARDS } from '../health/targets';
 import * as q from '../sources/queries';
-import { SourcesService } from '../sources/sources.service';
+import { SourceDb, SourcesService } from '../sources/sources.service';
 import { TYPE_LABEL } from '../users/users.service';
 import { VisitorsService } from '../visitors/visitors.service';
 
 export const CACHE_MS = 60_000;
+const TREND_DAYS = 14;
+const UPTIME_DAYS = 30;
 const nf = (n: number) => n.toLocaleString('en-US');
 
 export interface Change {
@@ -36,6 +38,8 @@ export interface Kpi extends Partial<Change> {
   label: string;
   value: string;
   note: string;
+  /** Daily values for the last 14 days, oldest first. */
+  trend: number[];
 }
 
 /** A small TTL cache that also shares one in-flight load between concurrent callers. */
@@ -92,32 +96,56 @@ export class OverviewService {
     });
   }
 
+  private loadTrends() {
+    return this.cache.get('trends', async () => {
+      const windows = dayWindows(TREND_DAYS);
+      const row = async (db: SourceDb, sql: q.Q) => {
+        const [r] = (await this.sources.tryQuery(db, sql)) ?? [];
+        return windows.map((_, i) => r?.[`w${i}`] ?? 0) as number[];
+      };
+      const [people, orders, shops, checkins] = await Promise.all([
+        Promise.all(PEOPLE_SYSTEMS.map(async (s) => [s, await row(q.dbOf(s), q.peopleCounts(s, windows))] as const)),
+        row('inventory', q.eventCounts('orders', windows)),
+        row('inventory', q.eventCounts('shops', windows)),
+        row('wafanyakazi', q.eventCounts('checkins', windows)),
+      ]);
+      return { people: new Map(people), orders, shops, checkins };
+    });
+  }
+
+  /** Clears cached numbers (tests). */
+  clearCache() {
+    this.cache.clear();
+  }
+
   async kpis(a: Actor, period: Period): Promise<Kpi[]> {
-    const f = await this.loadFacts(period);
+    const [f, trends, visitorDays] = await Promise.all([this.loadFacts(period), this.loadTrends(), this.visitors.report(a, TREND_DAYS)]);
     const r = periodRange(period);
     const compare = COMPARE[period];
     const out: Kpi[] = [];
+    const none: number[] = [];
 
     const allowed = PEOPLE_SYSTEMS.filter((s) => canSeeNumbers(a, s));
     if (allowed.length) {
       const known = allowed.map((s) => f.people[s]).filter((x): x is { cur: number; prev: number } => !!x);
       const cur = known.reduce((n, x) => n + x.cur, 0);
       const prev = known.reduce((n, x) => n + x.prev, 0);
-      out.push(known.length ? { key: 'users', label: 'New users, all systems', value: nf(cur), ...pctChange(cur, prev), note: compare } : { key: 'users', label: 'New users, all systems', value: '—', note: 'Could not read' });
+      const trend = trends.people.get(allowed[0])!.map((_, i) => allowed.reduce((n, s) => n + trends.people.get(s)![i], 0));
+      out.push(known.length ? { key: 'users', label: 'New users, all systems', value: nf(cur), ...pctChange(cur, prev), note: compare, trend } : { key: 'users', label: 'New users, all systems', value: '—', note: 'Could not read', trend: none });
     }
 
     const [cur, prev] = await Promise.all([this.visitors.totals(a, r.days), this.visitors.totals(a, r.prevDays)]);
-    if (cur !== null) out.push({ key: 'visitors', label: 'Website visitors', value: nf(cur), ...pctChange(cur, prev ?? 0), note: compare });
+    if (cur !== null) out.push({ key: 'visitors', label: 'Website visitors', value: nf(cur), ...pctChange(cur, prev ?? 0), note: compare, trend: visitorDays.days.map((d) => Object.values(d.counts).reduce((n, v) => n + v, 0)) });
 
-    if (canSeeNumbers(a, 'mauzo')) out.push(f.shops ? { key: 'shops', label: 'Active shops', value: nf(f.shops.total), ...absChange(f.shops.added), note: ADDED[period] } : { key: 'shops', label: 'Active shops', value: '—', note: 'Could not read' });
-    if (canSeeNumbers(a, 'soko')) out.push(f.orders ? { key: 'orders', label: 'Soko orders', value: nf(f.orders.cur), ...pctChange(f.orders.cur, f.orders.prev), note: compare } : { key: 'orders', label: 'Soko orders', value: '—', note: 'Could not read' });
+    if (canSeeNumbers(a, 'mauzo')) out.push(f.shops ? { key: 'shops', label: 'Active shops', value: nf(f.shops.total), ...absChange(f.shops.added), note: ADDED[period], trend: trends.shops } : { key: 'shops', label: 'Active shops', value: '—', note: 'Could not read', trend: none });
+    if (canSeeNumbers(a, 'soko')) out.push(f.orders ? { key: 'orders', label: 'Soko orders', value: nf(f.orders.cur), ...pctChange(f.orders.cur, f.orders.prev), note: compare, trend: trends.orders } : { key: 'orders', label: 'Soko orders', value: '—', note: 'Could not read', trend: none });
 
     if (canSeeNumbers(a, 'wafanyakazi')) {
       const t = f.attendance;
       const share = (i: number, n: number) => (n ? Math.round((i / n) * 100) : 0);
-      if (!t) out.push({ key: 'staff', label: 'Staff checked in', value: '—', note: 'Could not read' });
-      else if (period === 'today') out.push({ key: 'staff', label: 'Staff checked in', value: nf(t.cur), ...pctChange(t.cur, t.prev), note: `${compare} · ${share(t.cur_in, t.cur_roster)}% of rostered` });
-      else out.push({ key: 'staff', label: 'Staff checked in', value: `${share(t.cur_in, t.cur_roster)}%`, ...ptsChange(share(t.cur_in, t.cur_roster), share(t.prev_in, t.prev_roster)), note: 'attendance' });
+      if (!t) out.push({ key: 'staff', label: 'Staff checked in', value: '—', note: 'Could not read', trend: none });
+      else if (period === 'today') out.push({ key: 'staff', label: 'Staff checked in', value: nf(t.cur), ...pctChange(t.cur, t.prev), note: `${compare} · ${share(t.cur_in, t.cur_roster)}% of rostered`, trend: trends.checkins });
+      else out.push({ key: 'staff', label: 'Staff checked in', value: `${share(t.cur_in, t.cur_roster)}%`, ...ptsChange(share(t.cur_in, t.cur_roster), share(t.prev_in, t.prev_roster)), note: 'attendance', trend: trends.checkins });
     }
     return out;
   }
@@ -145,7 +173,12 @@ export class OverviewService {
   }
 
   async systems(a: Actor) {
-    const [numbers, { recent, lastCheckAt }, uptime, deploys, notes] = await Promise.all([this.cardNumbers(), this.checks.recent(), this.checks.uptime(), this.checks.deployDates(), this.ds.getRepository(SystemNote).find()]);
+    const history = this.cache.get('uptime', async () => {
+      const [uptime, byDay] = await Promise.all([this.checks.uptime(), this.checks.uptimeByDay()]);
+      return { uptime, byDay };
+    });
+    const [numbers, { recent, lastCheckAt }, { uptime, byDay }, deploys, notes] = await Promise.all([this.cardNumbers(), this.checks.recent(), history, this.checks.deployDates(), this.ds.getRepository(SystemNote).find()]);
+    const days = lastDays(UPTIME_DAYS);
     const status = this.checks.statuses(recent);
     const cards = CARDS.filter((c) => canSeeNumbers(a, c.system)).map((c) => ({
       id: c.id,
@@ -155,6 +188,7 @@ export class OverviewService {
       status: status.get(c.id),
       note: notes.find((n) => n.card === c.id)?.note ?? null,
       uptime: this.checks.cardUptime(c, uptime),
+      days: this.checks.cardDays(c, byDay, days),
       lastDeploy: deploys.get(c.id) ?? null,
       stats: numbers[c.id],
     }));

@@ -2,7 +2,10 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError, del, get, patch, post, session, type SystemKey } from '@/api'
-import { clock, dayOfMonth, greeting, longDate, shortDate, SYSTEM_LABEL, timeAgo } from '@/format'
+import Sparkline from '@/components/Sparkline.vue'
+import TrendChart from '@/components/TrendChart.vue'
+import UptimeStrip from '@/components/UptimeStrip.vue'
+import { clock, greeting, longDate, shortDate, siteColour, SYSTEM_LABEL, timeAgo } from '@/format'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,22 +19,22 @@ const alerts = ref<any[]>([])
 const error = ref('')
 const search = ref('')
 
-const SITE_COLOURS = ['#0f6b6b', '#f0b429', '#2f4d8a', '#7a4a00', '#3d4a08', '#4d5f5c']
-const stacked = computed(() => (visitors.value?.sites.length ?? 0) > 3)
-const colour = (site: string) => SITE_COLOURS[visitors.value.sites.indexOf(site) % SITE_COLOURS.length]
-const maxBar = computed(() => {
-  const days = visitors.value?.days ?? []
-  const heights = days.map((d: any) => {
-    const v = Object.values(d.counts) as number[]
-    return stacked.value ? v.reduce((a, b) => a + b, 0) : Math.max(0, ...v)
-  })
-  return Math.max(1, ...heights)
-})
 const hasVisitors = computed(() => (visitors.value?.sites.length ?? 0) > 0)
 
 const pillClass = (c: any) => (c.status === 'Down' ? 'bad' : c.status === 'No data' ? 'none' : c.status === 'Degraded' || c.note ? 'warn' : '')
 /** A real outage always beats the manual note. */
 const pillText = (c: any) => (c.status === 'Down' || c.status === 'Degraded' ? c.status : c.note || c.status)
+/** The one sentence the owner reads first. */
+const summary = computed(() => {
+  const cards: any[] = systems.value?.cards ?? []
+  const down = cards.filter((c) => c.status === 'Down')
+  const slow = cards.filter((c) => c.status === 'Degraded')
+  if (down.length) return { level: 'bad', text: `${down.map((c) => c.name).join(', ')} ${down.length > 1 ? 'are' : 'is'} down` }
+  if (slow.length) return { level: 'warn', text: `${slow.map((c) => c.name).join(', ')} ${slow.length > 1 ? 'are' : 'is'} degraded` }
+  const live = cards.filter((c) => c.status === 'Online').length
+  if (!live) return { level: 'warn', text: 'Waiting for the first health checks' }
+  return { level: '', text: `All ${live} systems online${alerts.value.length ? ` · ${alerts.value.length} to look at` : ''}` }
+})
 const canNote = (c: any) => me.value.isOwner || me.value.access[(c.id === 'global' ? 'mauzo' : c.id) as SystemKey] === 'admin'
 const noteSystems = computed(() => (Object.keys(SYSTEM_LABEL) as SystemKey[]).filter((s) => me.value.isOwner || ['admin', 'support'].includes(me.value.access[s])))
 
@@ -88,47 +91,51 @@ onUnmounted(() => clearInterval(timer))
 </script>
 
 <template>
-  <header class="head">
-    <div class="head-text">
-      <span>{{ longDate() }}</span>
-      <h1>{{ greeting() }}, {{ me.name.split(' ')[0] }}</h1>
-    </div>
-    <div class="head-tools">
-      <form class="search" @submit.prevent="router.push({ path: '/users', query: { q: search, joined: 'all' } })">
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d5f5c" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-        <label><span class="sr">Search</span></label>
-        <input v-model="search" type="search" aria-label="Search" placeholder="Search users, shops, phones" />
-      </form>
-      <div class="periods" role="group" aria-label="Period">
-        <button v-for="p in periods" :key="p.id" type="button" :class="{ on: period === p.id }" @click="period = p.id">{{ p.label }}</button>
+  <section class="hero rise" aria-label="Summary">
+    <div class="hero-top">
+      <div>
+        <div class="hero-date">{{ longDate() }}</div>
+        <h1>{{ greeting() }}, {{ me.name.split(' ')[0] }}</h1>
+        <div v-if="systems" class="pulse-line" :class="summary.level" role="status"><span class="pulse" />{{ summary.text }}</div>
+      </div>
+      <div class="head-tools">
+        <form class="search" @submit.prevent="router.push({ path: '/users', query: { q: search, joined: 'all' } })">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input v-model="search" type="search" aria-label="Search" placeholder="Search users, shops, phones" />
+        </form>
+        <div class="periods" role="group" aria-label="Period">
+          <button v-for="p in periods" :key="p.id" type="button" :class="{ on: period === p.id }" @click="period = p.id">{{ p.label }}</button>
+        </div>
       </div>
     </div>
-  </header>
-
-  <div v-if="error" class="error" role="alert">{{ error }}</div>
-
-  <section v-if="overview" aria-label="Key numbers" class="grid-kpi">
-    <div v-for="k in overview.kpis" :key="k.key" class="kpi">
-      <span class="kpi-label">{{ k.label }}</span>
-      <span class="kpi-value">{{ k.value }}</span>
-      <div class="kpi-foot"><span v-if="k.delta" class="delta" :class="{ down: k.down }">{{ k.delta }}</span><span>{{ k.note }}</span></div>
+    <div v-if="overview" class="hero-kpis">
+      <div v-for="k in overview.kpis" :key="k.key" class="hero-kpi">
+        <span class="kpi-label">{{ k.label }}</span>
+        <span class="kpi-value">{{ k.value }}</span>
+        <Sparkline :values="k.trend" :label="k.label" />
+        <div class="kpi-foot"><span v-if="k.delta" class="delta" :class="{ down: k.down }">{{ k.delta }}</span><span>{{ k.note }}</span></div>
+      </div>
     </div>
   </section>
 
-  <section v-if="systems" id="systems" class="section" aria-labelledby="systems-h">
+  <div v-if="error" class="error" role="alert">{{ error }}</div>
+
+  <section v-if="systems" id="systems" class="section rise" aria-labelledby="systems-h">
     <div class="section-head">
       <h2 id="systems-h">Systems</h2>
       <span class="hint">Checked every minute<template v-if="systems.lastCheckAt"> · last check {{ clock(systems.lastCheckAt) }}</template></span>
     </div>
     <div class="grid-sys">
-      <article v-for="c in systems.cards" :key="c.id" class="sys">
+      <article v-for="c in systems.cards" :key="c.id" class="sys" :class="`edge-${c.id}`">
         <div class="sys-top">
           <div class="sys-mark" :class="`mark-${c.id}`">{{ c.initials }}</div>
           <div class="sys-name"><h3>{{ c.name }}</h3><span>{{ c.domain }}</span></div>
-          <button v-if="canNote(c)" type="button" class="pill" :class="pillClass(c)" :title="`Set a note on ${c.name}`" @click="editCard(c)">{{ pillText(c) }}</button>
-          <span v-else class="pill" :class="pillClass(c)">{{ pillText(c) }}</span>
+          <button v-if="canNote(c)" type="button" class="pill" :class="pillClass(c)" :title="`Set a note on ${c.name}`" @click="editCard(c)"><span class="live" />{{ pillText(c) }}</button>
+          <span v-else class="pill" :class="pillClass(c)"><span class="live" />{{ pillText(c) }}</span>
         </div>
         <div class="stats"><div v-for="s in c.stats" :key="s.l" class="stat"><b>{{ s.v }}</b>{{ s.l }}</div></div>
+        <UptimeStrip :days="c.days" />
+        <div class="strip-note"><span>30 days ago</span><span>Today</span></div>
         <div class="sys-foot">
           <span>Uptime {{ c.uptime == null ? '—' : `${c.uptime.toFixed(2)}%` }}</span>
           <span>{{ c.lastDeploy ? `Deployed ${shortDate(c.lastDeploy)}` : 'Deploy date unknown' }}</span>
@@ -137,20 +144,13 @@ onUnmounted(() => clearInterval(timer))
     </div>
   </section>
 
-  <div v-if="visitors" class="row">
+  <div v-if="visitors" class="row rise">
     <section id="visitors" class="card wide" aria-labelledby="visitors-h">
       <div class="section-head">
         <div><h2 id="visitors-h">Website visitors</h2><span class="hint">Unique visitors per day, last 14 days</span></div>
-        <div class="legend"><span v-for="s in visitors.sites" :key="s"><i :style="{ background: colour(s) }" />{{ s }}</span></div>
+        <div class="legend"><span v-for="s in visitors.sites" :key="s"><i :style="{ background: siteColour(s) }" />{{ s }}</span></div>
       </div>
-      <template v-if="hasVisitors">
-        <div class="chart" role="img" :aria-label="`Bar chart of daily visitors for ${visitors.sites.join(', ')} over the last 14 days`">
-          <div v-for="d in visitors.days" :key="d.date" class="col" :class="{ stacked }">
-            <div v-for="s in visitors.sites" :key="s" class="bar" :title="`${s}: ${d.counts[s]} on ${shortDate(d.date)}`" :style="{ background: colour(s), height: `${(d.counts[s] / maxBar) * 100}%` }" />
-          </div>
-        </div>
-        <div class="axis"><span v-for="d in visitors.days" :key="d.date">{{ dayOfMonth(d.date) }}</span></div>
-      </template>
+      <TrendChart v-if="hasVisitors" :days="visitors.days" :sites="visitors.sites" />
       <p v-else class="empty">No visitor numbers yet. They start once the site logs are being read.</p>
     </section>
 
@@ -164,7 +164,7 @@ onUnmounted(() => clearInterval(timer))
     </section>
   </div>
 
-  <div class="row">
+  <div class="row rise">
     <section v-if="overview?.signups.length" class="card wide" aria-labelledby="new-h">
       <div class="section-head"><h2 id="new-h">New sign-ups</h2><router-link to="/users" style="font-size: 14px; font-weight: 600">All users</router-link></div>
       <div class="scroll">
@@ -197,7 +197,7 @@ onUnmounted(() => clearInterval(timer))
     </section>
   </div>
 
-  <section v-if="systems?.server" class="card" aria-labelledby="server-h">
+  <section v-if="systems?.server" class="card rise" aria-labelledby="server-h">
     <div class="section-head"><h2 id="server-h">Server and services</h2><span class="hint">Contabo VPS</span></div>
     <div class="tiles">
       <div v-for="t in systems.server" :key="t.key" class="tile">

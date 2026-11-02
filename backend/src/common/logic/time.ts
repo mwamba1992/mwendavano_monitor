@@ -44,3 +44,12 @@ export function periodRange(period: Period, now: Date = new Date()): PeriodRange
 }
 
 export const lastDays = (n: number, now: Date = new Date()) => dayList(eatDayStart(now), n);
+
+/** One [start, end) window per calendar day, oldest first, today included. */
+export function dayWindows(n: number, now: Date = new Date()): [Date, Date][] {
+  const today = eatDayStart(now).getTime();
+  return Array.from({ length: n }, (_, i) => {
+    const start = today - (n - 1 - i) * DAY_MS;
+    return [new Date(start), new Date(start + DAY_MS)] as [Date, Date];
+  });
+}

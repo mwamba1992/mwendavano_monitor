@@ -114,6 +114,26 @@ export class ChecksService {
     return new Map(rows.map((r) => [r.target, Number(r.pct)]));
   }
 
+  /** target → date → uptime %, for the 30-day strips. */
+  async uptimeByDay(): Promise<Map<string, Map<string, number>>> {
+    const rows: { target: string; date: string; pct: string }[] = await this.ds.query(`SELECT target, ("checkedAt" AT TIME ZONE 'Africa/Dar_es_Salaam')::date::text AS date, 100.0 * count(*) FILTER (WHERE ok) / count(*) AS pct
+      FROM uptime_check WHERE "checkedAt" > now() - interval '${RAW_DAYS} days' GROUP BY 1, 2`);
+    const out = new Map<string, Map<string, number>>();
+    for (const r of rows) {
+      if (!out.has(r.target)) out.set(r.target, new Map());
+      out.get(r.target)!.set(r.date, Number(r.pct));
+    }
+    return out;
+  }
+
+  /** One value per day, the card's weakest part that day; null where nothing was checked. */
+  cardDays(card: Card, byDay: Map<string, Map<string, number>>, days: string[]) {
+    return days.map((date) => {
+      const v = [...card.http, ...card.services.map(svc)].map((t) => byDay.get(t)?.get(date)).filter((x): x is number => x !== undefined);
+      return { date, pct: v.length ? Math.min(...v) : null };
+    });
+  }
+
   /** A card is only as available as its weakest part. */
   cardUptime(card: Card, uptime: Map<string, number>): number | null {
     const v = [...card.http, ...card.services.map(svc)].map((t) => uptime.get(t)).filter((x): x is number => x !== undefined);

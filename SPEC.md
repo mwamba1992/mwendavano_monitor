@@ -38,6 +38,8 @@ The design files are in `design/`:
 
 Each file is HTML. The `renderVals()` script at the bottom holds the sample data and the exact colours and styles. Use them as the visual reference; do not import that format. Live design canvas, owner only: https://claude.ai/artifact/FnrYMoQ1xSVwgZt7TLcSvM
 
+The owner asked for a stronger Overview than the design file (2 Nov 2026), so the live screen adds a dark summary hero, 14-day KPI trend lines, 30-day uptime strips and a line chart. Colours and fonts below still apply.
+
 ### Design language
 - **Fonts:** Inter Tight for UI, IBM Plex Mono for numbers.
 - **Colours:**
@@ -92,7 +94,7 @@ Each file is HTML. The `renderVals()` script at the bottom holds the sample data
     | Cargo | in transit, arrived, customers |
     | Global Authentics | products, sales today, WhatsApp orders today |
 
-- **Website visitors** chart: daily unique visitors for 14 days, one bar series per site.
+- **Website visitors** chart: daily unique visitors for 14 days, one line per site.
 - **Where visitors come from**: referrers grouped as Instagram, Google, WhatsApp, Facebook, Direct, Other.
 - **New sign-ups**: latest 6 from all systems (name, system tag, type, location, time ago).
 - **Needs attention** alerts:

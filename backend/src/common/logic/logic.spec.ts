@@ -1,6 +1,6 @@
 import { canManageStaff, canRevealPhone, canSeeNumbers, canSeePeople, fullAccess, levelOf, noAccess, parseAccess, staffEditProblem } from '../../access/access';
 import { cardStatus } from '../../health/targets';
-import { eatDate, eatDayStart, periodRange } from './time';
+import { dayWindows, eatDate, eatDayStart, periodRange } from './time';
 import { productionConfigProblems } from '../security';
 import { absChange, pctChange, ptsChange, TtlCache } from '../../overview/overview.service';
 import { csvCell, joinedFrom, maskPhone } from '../../users/users.service';
@@ -60,6 +60,11 @@ describe('Dar es Salaam time', () => {
     expect(r.days).toHaveLength(7);
     expect(r.days[6]).toBe('2026-11-02');
     expect(r.prevDays[6]).toBe('2026-10-26');
+  });
+  it('splits days on the Dar es Salaam boundary, oldest first', () => {
+    const w = dayWindows(2, new Date('2026-11-02T05:00:00Z'));
+    expect(w[1][0].toISOString()).toBe('2026-11-01T21:00:00.000Z');
+    expect(w[0][1]).toEqual(w[1][0]);
   });
   it('builds the joined filter', () => expect(joinedFrom('all')).toBeNull());
 });
