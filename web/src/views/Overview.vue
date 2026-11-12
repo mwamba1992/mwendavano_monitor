@@ -42,18 +42,27 @@ const summary = computed(() => {
 const canNote = (c: any) => me.value.isOwner || me.value.access[(c.id === 'global' ? 'mauzo' : c.id) as SystemKey] === 'admin'
 const noteSystems = computed(() => (Object.keys(SYSTEM_LABEL) as SystemKey[]).filter((s) => me.value.isOwner || ['admin', 'support'].includes(me.value.access[s])))
 
+/** Each section shows as soon as its own numbers arrive, so one slow answer doesn't leave the page empty. */
 async function load() {
-  try {
-    const [o, s, v, a] = await Promise.all([get(`/overview?period=${period.value}`), get('/systems'), get('/visitors?days=14'), get<any[]>('/alerts')])
-    overview.value = o
-    systems.value = s
-    visitors.value = v
-    alerts.value = a
-    session.alerts = a.length
-    error.value = ''
-  } catch (e) {
-    if (e instanceof ApiError) error.value = e.message
-  }
+  let failed = ''
+  const one = <T,>(path: string, set: (v: T) => void) =>
+    get<T>(path).then(set, (e) => {
+      if (e instanceof ApiError) failed = e.message
+    })
+  await Promise.all([
+    one(`/overview?period=${period.value}`, (v) => (overview.value = v)),
+    one('/systems', (v) => (systems.value = v)),
+    one('/visitors?days=14', async (v) => {
+      const first = !visitors.value
+      visitors.value = v
+      if (first && route.hash === '#visitors') await nextTick(() => document.querySelector('#visitors')?.scrollIntoView())
+    }),
+    one<any[]>('/alerts', (v) => {
+      alerts.value = v
+      session.alerts = v.length
+    }),
+  ])
+  error.value = failed
 }
 
 const editing = ref<any>(null)
