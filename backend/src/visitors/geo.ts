@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import maxmind, { CityResponse, Reader } from 'maxmind';
+import maxmind, { AsnResponse, CityResponse, Reader } from 'maxmind';
 
 /**
  * Turns an IP into a place using a database file on this server (see deploy/update-geoip.sh), so no
@@ -75,5 +75,64 @@ export class GeoLookup {
   place(ip: string): string | null {
     if (!this.reader || !maxmind.validate(ip)) return null;
     return locationKey(this.reader.get(ip));
+  }
+}
+
+export const DEFAULT_ASN_DB = '/var/lib/mwendavano-monitor/dbip-asn-lite.mmdb';
+
+/**
+ * Networks of hosting and cloud companies. A page load from one of these is a server (a crawler, a
+ * scanner, an uptime checker), not a person, even when it calls itself Chrome. Matched against the
+ * network's registered name, so a provider's many network numbers are covered at once. Consumer VPNs
+ * and transit carriers are left out on purpose: real people browse through those.
+ */
+const HOSTING = new RegExp(
+  [
+    'amazon', '\\baws\\b', 'google', 'microsoft', 'azure', 'oracle', 'alibaba', 'aliyun', 'tencent', 'huawei cloud', 'huawei clouds',
+    'baidu', 'bytedance', 'hetzner', 'contabo', '\\bovh', 'digitalocean', 'digital ocean', 'linode', 'akamai', 'vultr', 'choopa',
+    'leaseweb', 'scaleway', 'online s\\.a\\.s', '\\bm247', 'datacamp', 'cdn77', 'fastly', 'hostinger', 'hostwinds', 'ionos',
+    'godaddy', 'namecheap', 'interserver', 'colocrossing', 'quadranet', 'psychz', 'sharktech', 'zenlayer', 'g-core', 'gcore',
+    'stark industries', '\\baeza\\b', 'pq hosting', 'kamatera', 'upcloud', 'netcup', 'ipxo', 'hivelocity', 'servers\\.com',
+    'phoenixnap', 'equinix', 'yandex cloud', 'selectel', 'timeweb', 'censys', 'shodan', 'internet-measurement', 'binaryedge',
+    'onyphe', 'hosting', 'datacenter', 'data center', 'data centre', 'colocation',
+  ].join('|'),
+  'i',
+);
+
+export const isHostingNetwork = (org: string | undefined | null) => !!org && HOSTING.test(org);
+
+/** Who owns the network an IP is on, from a database file on this server (see deploy/update-geoip.sh). */
+export class NetworkLookup {
+  private readonly log = new Logger(NetworkLookup.name);
+  private reader: Reader<AsnResponse> | null = null;
+  private loadedAt = 0;
+  private warned = false;
+
+  private get path() {
+    return process.env.GEOIP_ASN_DB || DEFAULT_ASN_DB;
+  }
+
+  async refresh() {
+    const st = await fs.stat(this.path).catch(() => null);
+    if (!st) {
+      this.reader = null;
+      if (!this.warned) this.log.warn(`No network database at ${this.path}: visits from data centres are not filtered out`);
+      this.warned = true;
+      return;
+    }
+    if (this.reader && st.mtimeMs === this.loadedAt) return;
+    try {
+      this.reader = await maxmind.open<AsnResponse>(this.path);
+      this.loadedAt = st.mtimeMs;
+    } catch (e: any) {
+      this.reader = null;
+      this.log.error(`Could not open ${this.path}: ${e?.message ?? e}`);
+    }
+  }
+
+  /** True when the IP belongs to a hosting or cloud company. Unknown networks count as people. */
+  isHosting(ip: string): boolean {
+    if (!this.reader || !maxmind.validate(ip)) return false;
+    return isHostingNetwork(this.reader.get(ip)?.autonomous_system_organization);
   }
 }

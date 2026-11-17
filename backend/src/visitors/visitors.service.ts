@@ -10,7 +10,7 @@ import { Actor, canSeeNumbers, SystemKey } from '../access/access';
 import { eatDate, lastDays } from '../common/logic/time';
 import { isProductionEnv } from '../common/security';
 import { LogOffset, VisitorDaily } from '../entities';
-import { GeoLookup, summarizeLocations } from './geo';
+import { GeoLookup, NetworkLookup, summarizeLocations } from './geo';
 import { addVisitor, classifyReferrer, countSketch, isPageView, mergeSketch, newSketch, parseLine, SOURCES } from './log-parser';
 
 /** One access_log per public site: see deploy/add-visitor-logs.sh. Those names are this table. */
@@ -30,6 +30,41 @@ interface Tally {
   locations: Record<string, number>;
 }
 type Tallies = Map<string, Tally>;
+
+/** Page loads of one browser (IP + user agent) on one day, held until the run ends so floods can be dropped. */
+interface BrowserDay {
+  ip: string;
+  userAgent: string;
+  pageViews: number;
+  arrivals: { source: string; place: string | null }[];
+}
+/** date → "ip userAgent" → that browser's day. */
+type Pending = Map<string, Map<string, BrowserDay>>;
+
+/**
+ * More page loads than this from one browser in one run (one day of history on the first read, about
+ * ten minutes after that) is a script, not a person reading pages.
+ */
+export const FLOOD_LIMIT = 100;
+
+/** Turns the run's browsers into the day totals, leaving out floods. */
+export function settle(pending: Pending, limit = FLOOD_LIMIT): Tallies {
+  const t: Tallies = new Map();
+  for (const [date, browsers] of pending) {
+    for (const b of browsers.values()) {
+      if (b.pageViews > limit) continue;
+      let day = t.get(date);
+      if (!day) t.set(date, (day = { sketch: newSketch(), pageViews: 0, sources: {}, locations: {} }));
+      day.pageViews += b.pageViews;
+      addVisitor(day.sketch, b.ip, b.userAgent);
+      for (const a of b.arrivals) {
+        day.sources[a.source] = (day.sources[a.source] ?? 0) + 1;
+        if (a.place) day.locations[a.place] = (day.locations[a.place] ?? 0) + 1;
+      }
+    }
+  }
+  return t;
+}
 
 /** Feeds complete lines to onLine and returns the bytes used, so a half-written last line waits for the next run. */
 async function readLines(path: string, start: number, onLine: (l: string) => void): Promise<number> {
@@ -62,6 +97,7 @@ export class VisitorsService {
   private readonly log = new Logger(VisitorsService.name);
   private running = false;
   private readonly geo = new GeoLookup();
+  private readonly networks = new NetworkLookup();
 
   constructor(private readonly ds: DataSource) {}
 
@@ -82,26 +118,29 @@ export class VisitorsService {
     this.running = true;
     try {
       await this.geo.refresh();
+      await this.networks.refresh();
       for (const { site } of SITES) await this.processSite(site);
     } finally {
       this.running = false;
     }
   }
 
-  private consume(line: string, site: string, t: Tallies) {
+  private consume(line: string, site: string, p: Pending) {
     const l = parseLine(line);
     if (!l || !isPageView(l)) return;
+    // A data centre is a server calling itself a browser: crawlers, scanners, uptime checks.
+    if (this.networks.isHosting(l.ip)) return;
     const date = eatDate(l.time);
-    let day = t.get(date);
-    if (!day) t.set(date, (day = { sketch: newSketch(), pageViews: 0, sources: {}, locations: {} }));
-    day.pageViews++;
-    addVisitor(day.sketch, l.ip, l.userAgent);
+    let browsers = p.get(date);
+    if (!browsers) p.set(date, (browsers = new Map()));
+    const key = `${l.ip} ${l.userAgent}`;
+    let b = browsers.get(key);
+    if (!b) browsers.set(key, (b = { ip: l.ip, userAgent: l.userAgent, pageViews: 0, arrivals: [] }));
+    b.pageViews++;
     const source = classifyReferrer(l.referrer, site);
     if (!source) return;
-    day.sources[source] = (day.sources[source] ?? 0) + 1;
     // Arrivals, like sources: clicking around inside a site does not make one person count as many.
-    const place = this.geo.place(l.ip);
-    if (place) day.locations[place] = (day.locations[place] ?? 0) + 1;
+    b.arrivals.push({ source, place: this.geo.place(l.ip) });
   }
 
   /** logrotate: x.log → x.log.1 → x.log.2.gz. The whole history is read once, on the first run. */
@@ -111,23 +150,23 @@ export class VisitorsService {
     if (!st) return;
     const repo = this.ds.getRepository(LogOffset);
     const row = await repo.findOne({ where: { path: live } });
-    const t: Tallies = new Map();
+    const p: Pending = new Map();
     let offset = row ? Number(row.offset) : 0;
     const inode = String(st.ino);
     const rotated = `${live}.1`;
 
     if (!row) {
-      for (const old of await this.rotatedFiles(live)) await readLines(old, 0, (l) => this.consume(l, site, t));
+      for (const old of await this.rotatedFiles(live)) await readLines(old, 0, (l) => this.consume(l, site, p));
     } else if (row.inode !== inode) {
       // Rotated since the last run: finish the old file first, or the tail of it is lost.
       const prev = await stat(rotated);
-      if (prev && String(prev.ino) === row.inode) await readLines(rotated, offset, (l) => this.consume(l, site, t));
+      if (prev && String(prev.ino) === row.inode) await readLines(rotated, offset, (l) => this.consume(l, site, p));
       offset = 0;
     } else if (st.size < offset) {
       offset = 0;
     }
-    offset += await readLines(live, offset, (l) => this.consume(l, site, t));
-    await this.save(site, t, live, inode, offset);
+    offset += await readLines(live, offset, (l) => this.consume(l, site, p));
+    await this.save(site, settle(p), live, inode, offset);
   }
 
   private async rotatedFiles(live: string): Promise<string[]> {
