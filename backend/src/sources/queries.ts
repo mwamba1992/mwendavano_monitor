@@ -134,6 +134,9 @@ export const unreviewedReports = (): Q => ({ sql: `SELECT count(*)::int AS n FRO
  * id, name, phone, type, plan, location, joined, last_active, status.
  * status is Trial/Active/Inactive/Blocked. "Inactive" also means nothing in the last 30 days.
  * Soko has no platform-wide block, so a buyer is never Blocked.
+ * Mauzo: Blocked means the shop is suspended, rejected or closed. The user column
+ * account_non_locked is not used: Mauzo never sets or checks it (it defaults to false,
+ * so phone sign-ups would all look blocked), and its real login lockout is in memory.
  */
 const QUIET = `interval '30 days'`;
 const people: Record<PeopleSystem, { db: SourceDb; base: () => string; params: () => unknown[]; types: string[] }> = {
@@ -148,7 +151,7 @@ const people: Record<PeopleSystem, { db: SourceDb; base: () => string; params: (
         b.address AS location,
         ${invTs('u.created_at')} AS joined,
         ${invTs('a.last_sale')} AS last_active,
-        CASE WHEN b.status IN ('suspended', 'rejected', 'closed') OR NOT u.account_non_locked THEN 'Blocked'
+        CASE WHEN b.status IN ('suspended', 'rejected', 'closed') THEN 'Blocked'
              WHEN NOT u.active OR NOT u.enabled THEN 'Inactive'
              WHEN s.status = 'trial' THEN 'Trial'
              WHEN a.last_sale IS NULL OR ${invTs('a.last_sale')} < now() - ${QUIET} THEN 'Inactive'
