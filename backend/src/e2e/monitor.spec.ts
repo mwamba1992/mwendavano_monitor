@@ -436,6 +436,106 @@ describe('Monitor end to end', () => {
     });
   });
 
+  describe('customer journey', () => {
+    const D = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+    const step = (app: string, event: string, device: number, hoursAgo: number, extra: { buyer?: number; business?: number; props?: object } = {}) =>
+      [app, event, D(device), extra.buyer ?? null, extra.business ?? null, extra.props ? JSON.stringify(extra.props) : null, new Date(Date.now() - hoursAgo * 3600_000).toISOString()];
+
+    beforeAll(async () => {
+      const rows = [
+        // Soko. 1: a guest who added to cart and left (came from WhatsApp).
+        step('soko', 'app_open', 1, 5, { props: { source: 'whatsapp' } }),
+        step('soko', 'product_view', 1, 4.9, { props: { product_id: 1, shop_id: 1 } }),
+        step('soko', 'add_to_cart', 1, 4.8, { props: { product_id: 1 } }),
+        // 2: all the way to an order, signing in on the way.
+        step('soko', 'app_open', 2, 3),
+        step('soko', 'product_view', 2, 2.9, { props: { product_id: 2, shop_id: 1 } }),
+        step('soko', 'add_to_cart', 2, 2.8, { props: { product_id: 2 } }),
+        step('soko', 'signin_start', 2, 2.7),
+        step('soko', 'signin_success', 2, 2.6, { buyer: 1 }),
+        step('soko', 'checkout_start', 2, 2.5, { buyer: 1 }),
+        step('soko', 'order_placed', 2, 2.4, { buyer: 1, props: { order_id: 9, items: 1, total: 25000 } }),
+        // 3: looked at one product.
+        step('soko', 'app_open', 3, 2),
+        step('soko', 'product_view', 3, 1.9, { props: { product_id: 1, shop_id: 1 } }),
+        // 4: App Review's phone, left out. 5: 40 days ago, outside 7 days.
+        step('soko', 'app_open', 4, 1, { buyer: 2 }),
+        step('soko', 'app_open', 5, 40 * 24),
+        // Mauzo. 11: a new shop from first open to a first sale, using the app on 3 days.
+        step('mauzo', 'app_open', 11, 50),
+        step('mauzo', 'app_open', 11, 26),
+        step('mauzo', 'signup_start', 11, 0.20),
+        step('mauzo', 'signup_code_sent', 11, 0.19),
+        step('mauzo', 'shop_created', 11, 0.18, { business: 5 }),
+        step('mauzo', 'first_product', 11, 0.17, { business: 5 }),
+        step('mauzo', 'sale_recorded', 11, 0.16, { business: 5, props: { items: 2, total: 3000 } }),
+        // 12: someone in a shop from before the app counted steps. 13: our own shop.
+        step('mauzo', 'app_open', 12, 1, { business: 2 }),
+        step('mauzo', 'app_open', 13, 1, { business: 1 }),
+      ];
+      await asAdmin(sources.inventory, async (c) => {
+        for (const r of rows) {
+          await c.query(`INSERT INTO core.app_event (app, event, device_id, buyer_id, business_id, props, platform, created_at) VALUES ($1, $2, $3, $4, $5, $6, 'android', $7)`, r);
+        }
+      });
+      await makeStaff('0711100077', 'Mauzo Pekee', { ...noAccess(), mauzo: 'view' });
+      tokens.mauzoOnly = (await login('0711100077')).accessToken;
+    });
+
+    it('counts the Soko funnel in order, without App Review or old phones', async () => {
+      const r = await request(http).get('/api/journey?app=soko&period=7d').set(bearer('support')).expect(200);
+      expect(r.body.ready).toBe(true);
+      expect(r.body.failed).toBe(false);
+      expect(r.body.funnel.map((s: any) => s.devices)).toEqual([3, 3, 2, 1, 1, 1, 1]);
+      expect(r.body.funnel[2]).toMatchObject({ key: 'add_to_cart', ofPrevious: 66.7, ofFirst: 66.7 });
+      const all = await request(http).get('/api/journey?app=soko&period=all').set(bearer('support')).expect(200);
+      expect(all.body.funnel[0].devices).toBe(4);
+    });
+
+    it('lists visitors with a path, products and install sources', async () => {
+      const r = await request(http).get('/api/journey?app=soko&period=7d').set(bearer('support')).expect(200);
+      expect(r.body.visitors.map((v: any) => v.who)).toEqual(['Guest', 'Fatuma Mnunuzi', 'Guest']);
+      expect(r.body.visitors[2].path).toBe('opened 1×, viewed 1 product, added Saa, no checkout');
+      expect(r.body.visitors[1].path).toContain('ordered');
+      expect(r.body.products[0]).toMatchObject({ id: 1, name: 'Saa', views: 2, viewers: 2, adds: 1, orders: 0 });
+      expect(r.body.sources).toEqual([{ source: 'unknown', devices: 2 }, { source: 'whatsapp', devices: 1 }]);
+    });
+
+    it('a View user sees the numbers but no buyer or shop name', async () => {
+      const r = await request(http).get('/api/journey?app=soko&period=7d').set(bearer('view')).expect(200);
+      expect(r.body.peopleHidden).toBe(true);
+      expect(r.body.funnel[0].devices).toBe(3);
+      expect(JSON.stringify(r.body)).not.toContain('Fatuma');
+      const m = await request(http).get('/api/journey?app=mauzo&period=7d').set(bearer('view')).expect(200);
+      expect(JSON.stringify(m.body.shops)).not.toContain('Duka Jipya');
+    });
+
+    it('someone without the system gets nothing, and a bad app is refused', async () => {
+      await request(http).get('/api/journey?app=soko').set(bearer('mauzoOnly')).expect(403);
+      await request(http).get('/api/journey?app=mauzo').set(bearer('mauzoOnly')).expect(200);
+      await request(http).get('/api/journey?app=cargo').set(bearer('owner')).expect(400);
+    });
+
+    it('counts the Mauzo funnel for new shops only, then how active they stay', async () => {
+      const r = await request(http).get('/api/journey?app=mauzo&period=7d').set(bearer('support')).expect(200);
+      expect(r.body.funnel.map((s: any) => s.key)).toEqual(['app_open', 'signup_start', 'signup_code_sent', 'shop_created', 'first_product', 'sale_recorded', 'active_3', 'active_daily']);
+      expect(r.body.funnel.map((s: any) => s.devices)).toEqual([1, 1, 1, 1, 1, 1, 1, 0]);
+    });
+
+    it('lists new shops with how far they got, and flags the ones with no sale', async () => {
+      const r = await request(http).get('/api/journey?app=mauzo&period=7d').set(bearer('support')).expect(200);
+      const names = r.body.shops.map((s: any) => s.name);
+      expect(names).toContain('Duka Jipya');
+      expect(names).toContain('Duka la Mfano');
+      expect(names).not.toContain('Duka la Majaribio');
+      expect(names).not.toContain('Global Authentics TZ');
+      const jipya = r.body.shops.find((s: any) => s.name === 'Duka Jipya');
+      expect(jipya).toMatchObject({ call: true, sales: 0, usesApp: true, inSoko: false });
+      expect(jipya.path).toMatch(/^Duka Jipya: signed up \d+ \w+, 0 products, no sale yet, last active today, never opened Sokoni$/);
+      expect(r.body.shops.find((s: any) => s.name === 'Duka la Mfano')).toMatchObject({ call: false, sales: 4 });
+    });
+  });
+
   it('records sign-ins in the activity log', async () => {
     expect(await ds.getRepository(ActivityLog).countBy({ action: 'login' })).toBeGreaterThan(3);
     expect(await ds.getRepository(ActivityLog).countBy({ action: 'login_failed' })).toBeGreaterThan(0);
