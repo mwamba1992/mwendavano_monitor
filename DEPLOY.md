@@ -67,6 +67,19 @@ cd /var/www/mwendavano-monitor && git pull --ff-only && bash deploy/deploy.sh
 
 `.env` and the database are left alone. Migrations run at boot.
 
+## Turn on the Customer journey page
+
+The page reads `core.app_event`, which the Dukani API (branch `feat/journey-events`) creates at
+start-up through TypeORM synchronize, and the Soko and Mauzo apps fill. In this order, each step
+only after the owner's OK:
+
+1. Deploy the API build with the events table and restart it: `systemctl restart dukani-api`.
+   Check: `sudo -u postgres psql -d inventorydb -c '\d core.app_event'`.
+2. Let `monitor_ro` read it (default privileges may already cover it; the check says):
+   `sudo -u postgres psql -d inventorydb -f deploy/monitor-ro-app-event.sql`
+3. Deploy this Monitor build (Updates, below) and `systemctl restart monitor-api`.
+4. Until the new app releases are out, the page says there is no data yet; it never fails.
+
 ## Checks after any deploy
 
 ```bash
