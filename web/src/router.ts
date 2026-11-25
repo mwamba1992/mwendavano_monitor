@@ -14,6 +14,7 @@ export const router = createRouter({
       children: [
         { path: '', component: () => import('./views/Overview.vue') },
         { path: 'users', component: () => import('./views/Users.vue') },
+        { path: 'journey', component: () => import('./views/Journey.vue') },
         { path: 'staff', component: () => import('./views/Staff.vue') },
         { path: 'account', component: () => import('./views/Account.vue') },
       ],
