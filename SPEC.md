@@ -207,6 +207,7 @@ mwendavano-monitor/
 - Classify the referrer into the source groups listed under Overview.
 - Run every 10 minutes, keeping a file offset so it resumes where it stopped. Store **only aggregates** (`visitor_daily`: date, site, visitors, page views, source counts, place counts). Do not store IPs.
 - Places come from the DB-IP City Lite file on this server (`deploy/update-geoip.sh`, monthly), so no IP leaves the box. Only "Country|City" counts are kept. DB-IP Lite is CC BY 4.0, so Overview keeps its "IP Geolocation by DB-IP" link.
+- Not people: besides bot user agents, page loads from data-centre networks (DB-IP ASN Lite, same script: Amazon, Google, Microsoft, Hetzner, Contabo, Alibaba, Tencent and other hosting companies) are skipped, and a browser (IP + user agent) with more than 100 page loads in one run is dropped as a flood.
 - Check the actual log names and formats in the nginx site configs on the server first. If the sites share one log, add a site-specific `access_log` (that is a deploy step, so ask first).
 
 ### Auth and roles

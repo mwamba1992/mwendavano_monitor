@@ -1516,3 +1516,20 @@ ALTER TABLE ONLY core.expense
     ADD CONSTRAINT "FK_f3590f9f3b52f5e4cceb323d86b" FOREIGN KEY (business_id) REFERENCES core.business(id);
 ALTER TABLE ONLY core.item_price
     ADD CONSTRAINT "FK_f8046453707754686bb1775ef71" FOREIGN KEY ("itemId") REFERENCES core.item(id);
+CREATE TABLE core.app_event (
+    id bigserial PRIMARY KEY,
+    app character varying(16) DEFAULT 'soko'::character varying NOT NULL,
+    event character varying(40) NOT NULL,
+    device_id uuid NOT NULL,
+    buyer_id integer,
+    user_id integer,
+    business_id integer,
+    props jsonb,
+    app_version character varying(20),
+    platform character varying(10),
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE INDEX "IDX_app_event_event_created_at" ON core.app_event USING btree (event, created_at);
+CREATE INDEX "IDX_app_event_device_id" ON core.app_event USING btree (device_id);
+CREATE INDEX "IDX_app_event_buyer_id" ON core.app_event USING btree (buyer_id);
+CREATE INDEX "IDX_app_event_business_id" ON core.app_event USING btree (business_id);

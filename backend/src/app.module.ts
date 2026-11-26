@@ -11,6 +11,8 @@ import { AuthStaff, ClientIp, CoreModule, CurrentStaff, JwtAuthGuard, Public } f
 import { isPeriod } from './common/logic/time';
 import { dbOptions } from './db-options';
 import { ChecksService } from './health/checks.service';
+import { isJourneyPeriod, JourneyService } from './journey/journey.service';
+import { isJourneyApp } from './sources/journey';
 import { OverviewService } from './overview/overview.service';
 import { SourcesService } from './sources/sources.service';
 import { StaffService } from './staff/staff.service';
@@ -54,6 +56,7 @@ export class ApiController {
     private readonly users: UsersService,
     private readonly alerts: AlertsService,
     private readonly staff: StaffService,
+    private readonly journey: JourneyService,
   ) {}
 
   @Public() @Get('health')
@@ -84,6 +87,13 @@ export class ApiController {
     const n = Number(days ?? 14);
     if (!Number.isInteger(n) || n < 1 || n > 90) throw new BadRequestException('days must be between 1 and 90');
     return this.visitors.report(s, n);
+  }
+
+  /** Customer journey (read-only): where people drop off between install and order (Soko) or first sale (Mauzo). */
+  @Get('journey')
+  getJourney(@CurrentStaff() s: AuthStaff, @Query('app') app?: string, @Query('period') period?: string) {
+    if (!isJourneyApp(app)) throw new BadRequestException("app must be 'soko' or 'mauzo'");
+    return this.journey.report(s, app, isJourneyPeriod(period) ? period : '7d');
   }
 
   @Get('users')
@@ -142,6 +152,6 @@ export class ApiController {
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), ScheduleModule.forRoot(), TypeOrmModule.forRootAsync({ useFactory: dbOptions }), CoreModule, AuthModule],
   controllers: [ApiController],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, SourcesService, ChecksService, VisitorsService, OverviewService, UsersService, AlertsService, StaffService],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, SourcesService, ChecksService, VisitorsService, OverviewService, UsersService, AlertsService, StaffService, JourneyService],
 })
 export class AppModule {}
