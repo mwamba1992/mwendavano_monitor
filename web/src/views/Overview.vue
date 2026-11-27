@@ -15,6 +15,7 @@ const periods = [{ id: 'today', label: 'Today' }, { id: '7d', label: '7 days' },
 const overview = ref<any>(null)
 const systems = ref<any>(null)
 const visitors = ref<any>(null)
+const active = ref<any[] | null>(null)
 const alerts = ref<any[]>([])
 const error = ref('')
 const search = ref('')
@@ -52,6 +53,7 @@ async function load() {
   await Promise.all([
     one(`/overview?period=${period.value}`, (v) => (overview.value = v)),
     one('/systems', (v) => (systems.value = v)),
+    one<any[]>('/active-users', (v) => (active.value = v)),
     one('/visitors?days=14', async (v) => {
       const first = !visitors.value
       visitors.value = v
@@ -154,6 +156,30 @@ onUnmounted(() => clearInterval(timer))
           <span>{{ c.lastDeploy ? `Deployed ${shortDate(c.lastDeploy)}` : 'Deploy date unknown' }}</span>
         </div>
       </article>
+    </div>
+  </section>
+
+  <section v-if="active?.length" id="active" class="card rise" aria-labelledby="active-h">
+    <div class="section-head">
+      <div><h2 id="active-h">Active users</h2><span class="hint">People who used each system (Mwendavano staff left out)</span></div>
+    </div>
+    <div class="scroll">
+      <table style="min-width: 560px">
+        <thead><tr><th>System</th><th class="right">Today</th><th class="right">7 days</th><th class="right">30 days</th><th>Last 14 days</th><th>Counting since</th></tr></thead>
+        <tbody>
+          <tr v-for="a in active" :key="a.system">
+            <td><span class="tag" :class="`tag-${a.system}`">{{ SYSTEM_LABEL[a.system] }}</span> <span class="hint">{{ a.system === 'soko' ? 'buyers' : a.system === 'mauzo' ? 'shop owners and staff' : a.system === 'wafanyakazi' ? 'employers and workers' : 'agents' }}</span></td>
+            <template v-if="a.available">
+              <td class="right strong">{{ number(a.today) }}</td>
+              <td class="right">{{ number(a.d7) }}</td>
+              <td class="right">{{ number(a.d30) }}</td>
+              <td><Sparkline v-if="a.byDay.length" :values="a.byDay.map((d: any) => d.count)" :label="`${SYSTEM_LABEL[a.system]} active users per day`" /><span v-else class="hint">last login only</span></td>
+              <td class="nowrap hint">{{ a.since ? shortDate(a.since) : a.source === 'last-login' ? 'latest login per person' : '—' }}</td>
+            </template>
+            <td v-else colspan="5" class="hint">Not recorded yet. Counting starts once the new version is live.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 

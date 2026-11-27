@@ -18,6 +18,7 @@ import { SourcesService } from './sources/sources.service';
 import { StaffService } from './staff/staff.service';
 import { Joined, UsersService } from './users/users.service';
 import { VisitorsService } from './visitors/visitors.service';
+import { ActiveService } from './active/active.service';
 
 class NoteDto {
   @IsString() @MaxLength(20) system: string;
@@ -57,6 +58,7 @@ export class ApiController {
     private readonly alerts: AlertsService,
     private readonly staff: StaffService,
     private readonly journey: JourneyService,
+    private readonly active: ActiveService,
   ) {}
 
   @Public() @Get('health')
@@ -94,6 +96,12 @@ export class ApiController {
   getJourney(@CurrentStaff() s: AuthStaff, @Query('app') app?: string, @Query('period') period?: string) {
     if (!isJourneyApp(app)) throw new BadRequestException("app must be 'soko' or 'mauzo'");
     return this.journey.report(s, app, isJourneyPeriod(period) ? period : '7d');
+  }
+
+  /** People who actually used each system today / 7 days / 30 days (read-only). */
+  @Get('active-users')
+  getActive(@CurrentStaff() s: AuthStaff) {
+    return this.active.report(s);
   }
 
   @Get('users')
@@ -152,6 +160,6 @@ export class ApiController {
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), ScheduleModule.forRoot(), TypeOrmModule.forRootAsync({ useFactory: dbOptions }), CoreModule, AuthModule],
   controllers: [ApiController],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, SourcesService, ChecksService, VisitorsService, OverviewService, UsersService, AlertsService, StaffService, JourneyService],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }, SourcesService, ChecksService, VisitorsService, OverviewService, UsersService, AlertsService, StaffService, JourneyService, ActiveService],
 })
 export class AppModule {}
